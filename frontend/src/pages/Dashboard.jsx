@@ -28,7 +28,7 @@ function Dashboard() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/dashboard",
+        "https://digital-will-wg4g.onrender.com/api/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,

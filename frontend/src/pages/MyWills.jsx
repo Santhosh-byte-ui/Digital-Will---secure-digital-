@@ -12,7 +12,7 @@ function MyWills() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/will/my-wills",
+        "https://digital-will-wg4g.onrender.com/api/will/my-wills",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -35,7 +35,7 @@ function MyWills() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/pdf/download/${willId}`,
+        `https://digital-will-wg4g.onrender.com/api/pdf/download/${willId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

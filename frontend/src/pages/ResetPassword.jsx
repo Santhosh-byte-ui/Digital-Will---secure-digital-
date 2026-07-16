@@ -10,7 +10,7 @@ function ResetPassword() {
   const resetPassword = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
+        `https://digital-will-wg4g.onrender.com/api/auth/reset-password/${token}`,
         {
           method: "POST",
           headers: {

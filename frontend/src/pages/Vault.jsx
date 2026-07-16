@@ -13,7 +13,7 @@ function Vault() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/vault",
+        "https://digital-will-wg4g.onrender.com/api/vault",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,7 +46,7 @@ function Vault() {
       formData.append("file", selectedFile);
 
       const response = await fetch(
-        "http://localhost:5000/api/vault/upload",
+        "https://digital-will-wg4g.onrender.com/api/vault/upload",
         {
           method: "POST",
           headers: {
@@ -80,7 +80,7 @@ function Vault() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/vault/${id}`,
+        `https://digital-will-wg4g.onrender.com/api/vault/${id}`,
         {
           method: "DELETE",
           headers: {

@@ -12,7 +12,7 @@ function DeadManSettings() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/deadman/settings",
+        "https://digital-will-wg4g.onrender.com/api/deadman/settings",
         {
           method: "POST",
           headers: {

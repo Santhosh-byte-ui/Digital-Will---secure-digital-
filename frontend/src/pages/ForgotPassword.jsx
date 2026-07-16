@@ -6,7 +6,7 @@ function ForgotPassword() {
   const forgotPassword = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/forgot-password",
+        "https://digital-will-wg4g.onrender.com/api/auth/forgot-password",
         {
           method: "POST",
           headers: {

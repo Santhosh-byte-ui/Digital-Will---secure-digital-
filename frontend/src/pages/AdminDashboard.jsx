@@ -24,7 +24,7 @@ function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/stats",
+        "https://digital-will-wg4g.onrender.com/api/admin/stats",
         {
           headers: {
             Authorization: `Bearer ${token}`,

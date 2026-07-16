@@ -30,7 +30,7 @@ function CreateWill() {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/will/create",
+        "https://digital-will-wg4g.onrender.com/api/will/create",
         {
           method: "POST",
           headers: {

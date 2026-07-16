@@ -12,7 +12,7 @@ function BeneficiaryPortal() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/beneficiary-portal/my-will",
+        "https://digital-will-wg4g.onrender.com/api/beneficiary-portal/my-will",
         {
           headers: {
             Authorization: `Bearer ${token}`,

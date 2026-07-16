@@ -19,7 +19,7 @@ function Assets() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/assets",
+        "https://digital-will-wg4g.onrender.com/api/assets",
         {
           headers: {
             Authorization: `Bearer ${token}`,

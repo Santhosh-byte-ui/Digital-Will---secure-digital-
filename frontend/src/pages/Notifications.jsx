@@ -14,7 +14,7 @@ function Notifications() {
       console.log("TOKEN:", token);
 
       const response = await fetch(
-        "http://localhost:5000/api/notifications",
+        "https://digital-will-wg4g.onrender.com/api/notifications",
         {
           headers: {
             Authorization: `Bearer ${token}`,

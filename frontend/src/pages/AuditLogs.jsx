@@ -12,7 +12,7 @@ function AuditLogs() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        "http://localhost:5000/api/audit-logs",
+        "https://digital-will-wg4g.onrender.com/api/audit-logs",
         {
           headers: {
             Authorization: `Bearer ${token}`,

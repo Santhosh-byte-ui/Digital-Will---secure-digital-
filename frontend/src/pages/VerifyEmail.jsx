@@ -12,7 +12,7 @@ function VerifyEmail() {
   const verifyEmail = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/auth/verify-email/${token}`
+        `https://digital-will-wg4g.onrender.com/api/auth/verify-email/${token}`
       );
 
       const data = await response.json();
