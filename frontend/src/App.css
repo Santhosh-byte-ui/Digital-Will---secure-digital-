@@ -1,66 +1,121 @@
-body {
+/* Global Reset */
+
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-div {
-  text-align: center;
-  margin-top: 100px;
+/* Body */
+
+body {
+  background: #f4f7fc;
+  font-family: "Poppins", sans-serif;
+  color: #1f2937;
 }
 
-h1 {
-  color: darkblue;
-  font-size: 40px;
+/* Links */
+
+a {
+  text-decoration: none;
 }
 
-p {
-  font-size: 18px;
-  color: gray;
-}
+/* Buttons */
 
 button {
-  padding: 10px 20px;
-  margin: 10px;
-  font-size: 16px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* Home Container */
+
+.container {
+  width: 100%;
+}
+
+/* Hero Section */
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.hero h1 {
+  font-size: 52px;
+  color: #001f7f;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  max-width: 800px;
+  margin: auto;
+  color: #666;
+  font-size: 20px;
+  line-height: 1.8;
+}
+
+/* Features */
 
 .features {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-top: 100px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  padding: 60px;
 }
 
+/* Cards */
+
 .card {
-  width: 330px;
   background: white;
   padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
 }
 
 .card h3 {
-  color: #0d47a1;
+  color: #001f7f;
+  margin-bottom: 12px;
 }
 
 .card p {
-  width: auto;
+  color: #666;
+  line-height: 1.7;
 }
 
-input {
-  width: 300px;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+/* Inputs */
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
 }
 
-.card {
-  margin: 40px auto;
-  text-align: center;
+input:focus,
+textarea:focus {
+  border-color: #2563eb;
 }
 
-.card button {
-  width: 200px;
+/* Auth Card */
+
+.auth-card {
+  width: 450px;
+  margin: auto;
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
