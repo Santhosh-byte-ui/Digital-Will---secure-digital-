@@ -1,115 +1,118 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
-  const linkStyle = {
-    color: "rgba(255,255,255,0.9)",
-    textDecoration: "none",
-    fontWeight: "500",
-    fontSize: "15px",
+  const closeMenu = () => {
+    setMenuOpen(false);
   };
 
   return (
-    <nav
-      style={{
-        background: "#0f172a",
-        color: "white",
-        padding: "16px 40px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
-    >
+    <nav>
+
       {/* Logo */}
 
-      <div>
-        <h2
-          style={{
-            margin: 0,
-            fontWeight: "700",
-            fontSize: "24px",
-          }}
-        >
-          🔐 Digital Legacy
-        </h2>
+      <div className="logo">
+        <h2>🔐 Digital Legacy</h2>
 
-        <small
-          style={{
-            opacity: 0.7,
-            letterSpacing: "0.5px",
-          }}
-        >
+        <small>
           Inheritance Management Platform
         </small>
+      </div>
+
+      {/* Hamburger */}
+
+      <div
+        className="hamburger"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        {menuOpen ? "✖" : "☰"}
       </div>
 
       {/* Menu */}
 
       <div
-        style={{
-          display: "flex",
-          gap: "24px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
+        className={`menu ${
+          menuOpen ? "open" : ""
+        }`}
       >
-        <Link to="/dashboard" style={linkStyle}>
+
+        <Link
+          to="/dashboard"
+          onClick={closeMenu}
+        >
           Dashboard
         </Link>
 
-        <Link to="/create-will" style={linkStyle}>
+        <Link
+          to="/create-will"
+          onClick={closeMenu}
+        >
           Create Will
         </Link>
 
-        <Link to="/my-wills" style={linkStyle}>
+        <Link
+          to="/my-wills"
+          onClick={closeMenu}
+        >
           My Wills
         </Link>
 
-        <Link to="/assets" style={linkStyle}>
+        <Link
+          to="/assets"
+          onClick={closeMenu}
+        >
           Assets
         </Link>
 
-        <Link to="/vault" style={linkStyle}>
+        <Link
+          to="/vault"
+          onClick={closeMenu}
+        >
           Vault
         </Link>
 
-        <Link to="/notifications" style={linkStyle}>
+        <Link
+          to="/notifications"
+          onClick={closeMenu}
+        >
           Notifications
         </Link>
-         
-         <Link to="/audit-logs" style={linkStyle}>
-        📋 Audit Logs
+        <Link
+          to="/audit-logs"
+          onClick={closeMenu}
+        >
+          📋 Audit Logs
         </Link>
-      
-        <Link to="/deadman-settings" style={linkStyle} >
-         ⏳ Dead Man Settings
-         </Link>
+
+        <Link
+          to="/deadman-settings"
+          onClick={closeMenu}
+        >
+          ⏳ Dead Man Settings
+        </Link>
+
         <button
-          onClick={logout}
-          style={{
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            padding: "10px 18px",
-            borderRadius: "10px",
-            fontWeight: "600",
-            cursor: "pointer",
+          className="logout-btn"
+          onClick={() => {
+            closeMenu();
+            logout();
           }}
         >
           Logout
         </button>
+
       </div>
+
     </nav>
   );
 }
