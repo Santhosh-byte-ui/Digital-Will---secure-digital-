@@ -88,6 +88,12 @@ function Navbar() {
           Notifications
         </Link>
         <Link
+          to="/profile"
+          onClick={closeMenu}
+          >
+          👤 Profile
+         </Link>
+        <Link
           to="/audit-logs"
           onClick={closeMenu}
         >

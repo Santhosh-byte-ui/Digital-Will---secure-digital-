@@ -1,3 +1,4 @@
+import Profile from "./pages/Profile";
 import AuditLogs from "./pages/AuditLogs";
 import BeneficiaryPortal from "./pages/BeneficiaryPortal";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -51,6 +52,8 @@ function App() {
         />
 
         <Route path="/dashboard" element={<Dashboard />} />
+
+        <Route path="/profile" element={<Profile />} />
 
         <Route path="/deadman-settings"element={<DeadManSettings />}/>
 
