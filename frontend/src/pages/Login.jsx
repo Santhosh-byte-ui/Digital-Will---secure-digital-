@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 function Login() {
 
@@ -17,17 +18,21 @@ function Login() {
       return;
     }
 
+
     try{
 
       setLoading(true);
+
 
       const response = await fetch(
         "https://digital-will-wg4g.onrender.com/api/auth/login",
         {
           method:"POST",
+
           headers:{
             "Content-Type":"application/json"
           },
+
           body:JSON.stringify({
             email,
             password
@@ -37,6 +42,7 @@ function Login() {
 
 
       const data = await response.json();
+
 
 
       if(response.ok){
@@ -64,6 +70,7 @@ function Login() {
     catch(error){
 
       console.log(error);
+
       alert("Server Error");
 
     }
@@ -77,21 +84,34 @@ function Login() {
 
 
 
+
 return (
 
 <div
+
 style={{
+
 minHeight:"100vh",
+
 background:
 "linear-gradient(135deg,#020617,#0f172a,#1e3a8a)",
+
 display:"flex",
+
 justifyContent:"center",
+
 alignItems:"center",
+
 padding:"20px",
+
 boxSizing:"border-box",
+
 overflowX:"hidden"
+
 }}
+
 >
+
 
 
 <div
@@ -99,6 +119,7 @@ overflowX:"hidden"
 style={{
 
 width:"100%",
+
 maxWidth:"1200px",
 
 display:"grid",
@@ -116,9 +137,25 @@ alignItems:"center"
 
 
 
+
 {/* LEFT SECTION */}
 
-<div
+
+<motion.div
+
+initial={{
+opacity:0,
+x:-80
+}}
+
+animate={{
+opacity:1,
+x:0
+}}
+
+transition={{
+duration:0.8
+}}
 
 style={{
 
@@ -146,6 +183,7 @@ lineHeight:"1.2"
 >
 
 Digital Legacy &
+
 <br/>
 
 Inheritance Platform
@@ -213,10 +251,26 @@ fontSize:"18px"
 </div>
 
 
-</div>
+</motion.div>
+
+
 {/* RIGHT LOGIN CARD */}
 
-<div
+<motion.div
+
+initial={{
+opacity:0,
+x:80
+}}
+
+animate={{
+opacity:1,
+x:0
+}}
+
+transition={{
+duration:0.8
+}}
 
 style={{
 
@@ -235,8 +289,7 @@ boxSizing:"border-box"
 
 }}
 
->
-
+>{/* LOGIN CONTENT */}
 
 <div
 
@@ -290,7 +343,12 @@ Access your Digital Will account
 
 
 
-<input
+
+<motion.input
+
+whileFocus={{
+scale:1.02
+}}
 
 type="email"
 
@@ -322,7 +380,11 @@ boxSizing:"border-box"
 
 
 
-<input
+<motion.input
+
+whileFocus={{
+scale:1.02
+}}
 
 type="password"
 
@@ -349,6 +411,7 @@ boxSizing:"border-box"
 }}
 
 />
+
 
 
 
@@ -386,11 +449,25 @@ Forgot Password?
 
 </Link>
 
+
 </div>
 
 
 
-<button
+
+<motion.button
+
+whileHover={{
+
+scale:1.05
+
+}}
+
+whileTap={{
+
+scale:0.95
+
+}}
 
 onClick={handleLogin}
 
@@ -436,7 +513,8 @@ loading
 }
 
 
-</button>
+</motion.button>
+
 
 
 
@@ -469,6 +547,7 @@ Don't have an account?
 </p>
 
 
+
 <Link
 
 to="/register"
@@ -494,6 +573,7 @@ Create Account
 
 
 
+
 <div
 
 style={{
@@ -505,6 +585,7 @@ marginTop:"20px"
 }}
 
 >
+
 
 <Link
 
@@ -528,8 +609,7 @@ textDecoration:"none"
 </div>
 
 
-
-</div>
+</motion.div>
 
 
 </div>

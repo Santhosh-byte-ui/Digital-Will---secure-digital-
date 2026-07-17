@@ -1,18 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 function Profile() {
 
   const [editing,setEditing] = useState(false);
+  const [loading,setLoading] = useState(true);
 
   const [user,setUser] = useState({
-
-    name:"Digital User",
-    email:"user@example.com",
-    mobile:"",
-    emergencyName:"",
-    emergencyMobile:""
-
+    name:"",
+    email:"",
+    role:"",
+    emergencyContactName:"",
+    emergencyContactMobile:""
   });
+
+
+
+  useEffect(()=>{
+
+    fetchProfile();
+
+  },[]);
+
+
+
+  const fetchProfile = async()=>{
+
+    try{
+
+      const token = localStorage.getItem("token");
+
+
+      const response = await fetch(
+        "https://digital-will-wg4g.onrender.com/api/auth/profile",
+        {
+          headers:{
+            Authorization:`Bearer ${token}`
+          }
+        }
+      );
+
+
+      const data = await response.json();
+
+
+      if(response.ok){
+
+        setUser(data.user);
+
+      }
+
+
+    }
+    catch(error){
+
+      console.log(error);
+
+    }
+    finally{
+
+      setLoading(false);
+
+    }
+
+  };
+
 
 
   const handleChange=(e)=>{
@@ -28,209 +80,352 @@ function Profile() {
   };
 
 
-  return (
 
-    <div
+  const updateProfile=async()=>{
 
-    style={{
+    try{
 
-      minHeight:"100vh",
-
-      background:"#f8fafc",
-
-      padding:"40px"
-
-    }}
-
-    >
+      const token = localStorage.getItem("token");
 
 
-      <div
+      const response = await fetch(
+        "https://digital-will-wg4g.onrender.com/api/auth/emergency-contact",
+        {
+          method:"PUT",
+
+          headers:{
+            "Content-Type":"application/json",
+            Authorization:`Bearer ${token}`
+          },
+
+          body:JSON.stringify({
+
+            emergencyContactName:
+            user.emergencyContactName,
+
+            emergencyContactMobile:
+            user.emergencyContactMobile
+
+          })
+
+        }
+      );
+
+
+      const data = await response.json();
+
+
+      if(response.ok){
+
+        alert("Profile updated successfully");
+
+        setUser(data.user);
+
+        setEditing(false);
+
+      }
+
+
+    }
+    catch(error){
+
+      console.log(error);
+
+    }
+
+  };
+
+
+
+  if(loading){
+
+    return (
+
+      <motion.h2
+
+      initial={{opacity:0}}
+
+      animate={{opacity:1}}
 
       style={{
-
-        maxWidth:"700px",
-
-        margin:"auto",
-
-        background:"white",
-
-        borderRadius:"20px",
-
-        padding:"35px",
-
-        boxShadow:
-        "0 15px 35px rgba(0,0,0,0.1)"
-
+        textAlign:"center",
+        marginTop:"100px"
       }}
 
       >
 
+      Loading Profile...
 
-        <h1
+      </motion.h2>
 
-        style={{
+    );
 
-          textAlign:"center",
+  }
 
-          color:"#001f7f"
 
-        }}
 
-        >
+return (
 
-        👤 My Profile
+<div
 
-        </h1>
+style={{
 
+minHeight:"100vh",
 
-        <p
+background:"#f8fafc",
 
-        style={{
+padding:"30px 15px"
 
-          textAlign:"center",
+}}
 
-          color:"#666"
+>
 
-        }}
 
-        >
+<motion.div
 
-        Manage your personal information
+initial={{
+opacity:0,
+y:50
+}}
 
-        </p>
+animate={{
+opacity:1,
+y:0
+}}
 
+transition={{
+duration:.7
+}}
 
+style={{
 
-        <hr/>
+maxWidth:"650px",
 
+margin:"auto",
 
+background:"white",
 
+padding:"35px",
 
-        <label>Name</label>
+borderRadius:"25px",
 
-        <input
+boxShadow:
+"0 20px 40px rgba(0,0,0,0.12)"
 
-        name="name"
+}}
 
-        value={user.name}
+>
 
-        disabled={!editing}
 
-        onChange={handleChange}
+<h1
 
-        style={inputStyle}
+style={{
 
-        />
+textAlign:"center",
 
+color:"#001f7f"
 
+}}
 
-        <label>Email</label>
+>
 
-        <input
+👤 My Profile
 
-        value={user.email}
+</h1>
 
-        disabled
 
-        style={inputStyle}
+<p
 
-        />
+style={{
 
+textAlign:"center",
 
+color:"#666"
 
-        <label>Mobile Number</label>
+}}
 
-        <input
+>
 
-        name="mobile"
+Manage your personal information
 
-        value={user.mobile}
+</p>
 
-        disabled={!editing}
 
-        onChange={handleChange}
+<hr/>
 
-        style={inputStyle}
 
-        />
 
 
+<label>Name</label>
 
-        <h3
+<motion.input
 
-        style={{
+whileFocus={{
+scale:1.02
+}}
 
-          marginTop:"30px",
+value={user.name || ""}
 
-          color:"#001f7f"
+disabled
 
-        }}
+style={inputStyle}
 
-        >
+/>
 
-        🚨 Emergency Contact
 
-        </h3>
 
+<label>Email</label>
 
+<motion.input
 
-        <label>Contact Name</label>
+whileFocus={{
+scale:1.02
+}}
 
-        <input
+value={user.email || ""}
 
-        name="emergencyName"
+disabled
 
-        value={user.emergencyName}
+style={inputStyle}
 
-        disabled={!editing}
+/>
 
-        onChange={handleChange}
 
-        style={inputStyle}
 
-        />
+<label>Role</label>
 
+<motion.input
 
+whileFocus={{
+scale:1.02
+}}
 
-        <label>Contact Mobile</label>
+value={user.role || ""}
 
-        <input
+disabled
 
-        name="emergencyMobile"
+style={inputStyle}
 
-        value={user.emergencyMobile}
+/>
 
-        disabled={!editing}
 
-        onChange={handleChange}
 
-        style={inputStyle}
+<h3
 
-        />
+style={{
 
+color:"#001f7f",
 
+marginTop:"25px"
 
-        <button
+}}
 
-        onClick={()=>setEditing(!editing)}
+>
 
-        style={buttonStyle}
+🚨 Emergency Contact
 
-        >
+</h3>
 
-        {editing ? "💾 Save Profile" : "✏️ Edit Profile"}
 
-        </button>
 
 
+<label>Contact Name</label>
 
-      </div>
+<motion.input
 
+whileFocus={{
+scale:1.02
+}}
 
-    </div>
+name="emergencyContactName"
 
-  );
+value={
+user.emergencyContactName || ""
+}
+
+disabled={!editing}
+
+onChange={handleChange}
+
+style={inputStyle}
+
+/>
+
+
+
+
+<label>Contact Mobile</label>
+
+<motion.input
+
+whileFocus={{
+scale:1.02
+}}
+
+name="emergencyContactMobile"
+
+value={
+user.emergencyContactMobile || ""
+}
+
+disabled={!editing}
+
+onChange={handleChange}
+
+style={inputStyle}
+
+/>
+
+
+
+
+<motion.button
+
+whileHover={{
+scale:1.05
+}}
+
+whileTap={{
+scale:.95
+}}
+
+onClick={()=>{
+
+editing
+?
+updateProfile()
+:
+setEditing(true)
+
+}}
+
+style={buttonStyle}
+
+>
+
+{
+
+editing
+
+?
+
+"💾 Save Changes"
+
+:
+
+"✏️ Edit Profile"
+
+}
+
+</motion.button>
+
+
+</motion.div>
+
+
+</div>
+
+);
 
 }
 
