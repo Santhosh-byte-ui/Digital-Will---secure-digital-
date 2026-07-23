@@ -8,6 +8,9 @@ function Vault() {
     fetchFiles();
   }, []);
 
+  // ==========================
+  // Get Files
+  // ==========================
   const fetchFiles = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -27,12 +30,17 @@ function Vault() {
 
       if (response.ok) {
         setFiles(data.files);
+      } else {
+        alert(data.message);
       }
     } catch (error) {
       console.log(error);
     }
   };
 
+  // ==========================
+  // Upload File
+  // ==========================
   const uploadFile = async () => {
     if (!selectedFile) {
       alert("Please select a file");
@@ -69,6 +77,38 @@ function Vault() {
     }
   };
 
+  // ==========================
+  // Secure View / Download
+  // ==========================
+  const viewFile = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `https://digital-will-wg4g.onrender.com/api/vault/view/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        window.open(data.url, "_blank");
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Unable to open file");
+    }
+  };
+
+  // ==========================
+  // Delete File
+  // ==========================
   const deleteFile = async (id) => {
     const confirmDelete = window.confirm(
       "Delete this document?"
@@ -99,7 +139,7 @@ function Vault() {
     }
   };
 
-  return (
+   return (
     <div
       style={{
         minHeight: "100vh",
@@ -108,11 +148,9 @@ function Vault() {
       }}
     >
       {/* Header */}
-
       <div
         style={{
-          background:
-            "linear-gradient(135deg,#001f7f,#2563eb)",
+          background: "linear-gradient(135deg,#001f7f,#2563eb)",
           color: "white",
           padding: "30px",
           borderRadius: "20px",
@@ -122,19 +160,16 @@ function Vault() {
         <h1>🔐 Digital Vault</h1>
 
         <p>
-          Store important legal documents,
-          certificates and inheritance records
-          securely using AWS Cloud Storage.
+          Store important legal documents, certificates and inheritance
+          records securely using AWS Cloud Storage.
         </p>
       </div>
 
       {/* Stats */}
-
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
@@ -155,8 +190,7 @@ function Vault() {
         </div>
       </div>
 
-      {/* Upload Section */}
-
+      {/* Upload */}
       <div
         className="card"
         style={{
@@ -167,9 +201,7 @@ function Vault() {
 
         <input
           type="file"
-          onChange={(e) =>
-            setSelectedFile(e.target.files[0])
-          }
+          onChange={(e) => setSelectedFile(e.target.files[0])}
         />
 
         <br />
@@ -190,8 +222,6 @@ function Vault() {
         </button>
       </div>
 
-      {/* Files */}
-
       <h2
         style={{
           color: "#001f7f",
@@ -204,17 +234,13 @@ function Vault() {
       {files.length === 0 ? (
         <div className="card">
           <h2>📭 No Documents Found</h2>
-
-          <p>
-            Upload your first secure document.
-          </p>
+          <p>Upload your first secure document.</p>
         </div>
       ) : (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(320px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
             gap: "20px",
           }}
         >
@@ -226,8 +252,7 @@ function Vault() {
               <h3>📄 {file.fileName}</h3>
 
               <p>
-                <strong>Type:</strong>{" "}
-                {file.fileType}
+                <strong>Type:</strong> {file.fileType}
               </p>
 
               <p>
@@ -239,9 +264,7 @@ function Vault() {
 
               <p>
                 <strong>Uploaded:</strong>{" "}
-                {new Date(
-                  file.createdAt
-                ).toLocaleDateString()}
+                {new Date(file.createdAt).toLocaleDateString()}
               </p>
 
               <div
@@ -251,13 +274,9 @@ function Vault() {
                   marginTop: "15px",
                 }}
               >
+                {/* View */}
                 <button
-                  onClick={() =>
-                    window.open(
-                      file.fileUrl,
-                      "_blank"
-                    )
-                  }
+                  onClick={() => viewFile(file._id)}
                   style={{
                     flex: 1,
                     background: "#16a34a",
@@ -271,13 +290,9 @@ function Vault() {
                   👁 View
                 </button>
 
+                {/* Download */}
                 <button
-                  onClick={() =>
-                    window.open(
-                      file.fileUrl,
-                      "_blank"
-                    )
-                  }
+                  onClick={() => viewFile(file._id)}
                   style={{
                     flex: 1,
                     background: "#2563eb",
@@ -291,10 +306,9 @@ function Vault() {
                   ⬇ Download
                 </button>
 
+                {/* Delete */}
                 <button
-                  onClick={() =>
-                    deleteFile(file._id)
-                  }
+                  onClick={() => deleteFile(file._id)}
                   style={{
                     flex: 1,
                     background: "#dc2626",
