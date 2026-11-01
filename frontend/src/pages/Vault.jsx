@@ -1,312 +1,426 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  FaFolder,
+  FaFilePdf,
+  FaKey,
+  FaCloudUploadAlt,
+  FaEye,
+  FaDownload,
+  FaTrash,
+  FaShieldAlt,
+  FaCloud,
+  FaLock,
+} from "react-icons/fa";
 import { apiFetch } from "../api";
+import DashboardLayout from "../components/DashboardLayout";
 
 function Vault() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  // ==========================
-  // Get Files
-  // ==========================
-  const fetchFiles = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await apiFetch("/api/vault", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setFiles(data.files);
-      } else {
-        console.error("Could not load vault files.", response.status);
-      }
-    } catch (error) {
-      console.error("Could not load vault files.", error.name);
-    }
-  }, []);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    void Promise.resolve().then(fetchFiles);
-  }, [fetchFiles]);
+    async function fetchFiles() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await apiFetch("/api/vault", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setFiles(data.files || []);
+        }
+      } catch (error) {
+        console.error("Could not load vault files:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  // ==========================
-  // Upload File
-  // ==========================
-  const uploadFile = async () => {
+    void fetchFiles();
+  }, [refreshKey]);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
     if (!selectedFile) {
-      alert("Please select a file");
+      alert("Please select a document to upload");
       return;
     }
 
     try {
+      setUploading(true);
       const token = localStorage.getItem("token");
-
       const formData = new FormData();
       formData.append("file", selectedFile);
 
       const response = await apiFetch("/api/vault/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       const data = await response.json();
-
-      alert(data.message);
-
-      setSelectedFile(null);
-
-      fetchFiles();
+      if (response.ok) {
+        setSelectedFile(null);
+        setUploadModalOpen(false);
+        setRefreshKey((k) => k + 1);
+      } else {
+        alert(data.message || "Upload failed");
+      }
     } catch (error) {
-      console.log(error);
-      alert("Upload Failed");
+      console.error("Upload error:", error);
+      alert("Upload failed. Ensure server and storage connectivity.");
+    } finally {
+      setUploading(false);
     }
   };
 
-  // ==========================
-  // Secure View / Download
-  // ==========================
   const viewFile = async (id) => {
     try {
       const token = localStorage.getItem("token");
-
       const response = await apiFetch(`/api/vault/view/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await response.json();
-
-      if (response.ok) {
+      if (response.ok && data.url) {
         window.open(data.url, "_blank");
       } else {
-        alert(data.message);
+        alert(data.message || "Unable to open file");
       }
     } catch (error) {
-      console.log(error);
-      alert("Unable to open file");
+      console.error("File view error:", error);
+      alert("Unable to open file.");
     }
   };
 
-  // ==========================
-  // Delete File
-  // ==========================
-  const deleteFile = async (id) => {
-    const confirmDelete = window.confirm("Delete this document?");
-
-    if (!confirmDelete) return;
+  const deleteFile = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}" from your vault?`)) {
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
-
       const response = await apiFetch(`/api/vault/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await response.json();
-
-      alert(data.message);
-
-      fetchFiles();
+      if (response.ok) {
+        setRefreshKey((k) => k + 1);
+      } else {
+        alert(data.message || "Could not delete document");
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Delete error:", error);
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "N/A";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f4f7fc",
-        padding: "30px",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          background: "linear-gradient(135deg,#001f7f,#2563eb)",
-          color: "white",
-          padding: "30px",
-          borderRadius: "20px",
-          marginBottom: "30px",
-        }}
-      >
-        <h1>🔐 Digital Vault</h1>
-
-        <p>
-          Store important legal documents, certificates and inheritance records
-          securely using AWS Cloud Storage.
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-          gap: "20px",
-          marginBottom: "30px",
-        }}
-      >
-        <div className="card">
-          <h3>📄 Documents</h3>
-          <h1>{files.length}</h1>
+    <DashboardLayout title="Secure Document Vault" activeNav="vault">
+      {/* Header Row */}
+      <div className="dw-page-header-row">
+        <div className="dw-page-header-info">
+          <h2>Encrypted Cloud Storage Vault</h2>
+          <p>
+            Securely deposit legal deeds, property titles, insurance policies,
+            and cryptographic keys on AWS S3.
+          </p>
         </div>
-
-        <div className="card">
-          <h3>🔒 Security</h3>
-          <h1>100%</h1>
-        </div>
-
-        <div className="card">
-          <h3>☁ AWS S3</h3>
-          <h1>Active</h1>
+        <div>
+          <button
+            type="button"
+            className="dw-btn dw-btn-primary"
+            onClick={() => setUploadModalOpen(true)}
+          >
+            <FaCloudUploadAlt size={14} /> Upload New Document
+          </button>
         </div>
       </div>
 
-      {/* Upload */}
-      <div
-        className="card"
-        style={{
-          marginBottom: "30px",
-        }}
-      >
-        <h2>📤 Upload Document</h2>
+      {/* Top Metrics Row */}
+      <div className="dw-metrics-grid" style={{ marginBottom: "24px" }}>
+        <div className="dw-metric-card">
+          <div className="dw-metric-header">
+            <span className="dw-metric-title">Stored Documents</span>
+            <FaFolder className="dw-metric-icon blue" />
+          </div>
+          <div className="dw-metric-value">{files.length}</div>
+        </div>
 
-        <input
-          type="file"
-          onChange={(e) => setSelectedFile(e.target.files[0])}
-        />
+        <div className="dw-metric-card">
+          <div className="dw-metric-header">
+            <span className="dw-metric-title">Cloud Infrastructure</span>
+            <FaCloud className="dw-metric-icon indigo" />
+          </div>
+          <div className="dw-metric-value" style={{ color: "#3B82F6" }}>
+            AWS S3
+          </div>
+        </div>
 
-        <br />
-        <br />
+        <div className="dw-metric-card">
+          <div className="dw-metric-header">
+            <span className="dw-metric-title">Encryption Standard</span>
+            <FaLock className="dw-metric-icon purple" />
+          </div>
+          <div className="dw-metric-value">AES-256</div>
+        </div>
 
-        <button
-          onClick={uploadFile}
-          style={{
-            background: "#001f7f",
-            color: "white",
-            border: "none",
-            padding: "12px 22px",
-            borderRadius: "10px",
-            cursor: "pointer",
-          }}
-        >
-          Upload Securely
-        </button>
+        <div className="dw-metric-card">
+          <div className="dw-metric-header">
+            <span className="dw-metric-title">Access Policy</span>
+            <FaShieldAlt className="dw-metric-icon" style={{ color: "#10B981" }} />
+          </div>
+          <div className="dw-metric-value" style={{ color: "#10B981" }}>
+            Time-Signed
+          </div>
+        </div>
       </div>
 
-      <h2
-        style={{
-          color: "#001f7f",
-          marginBottom: "20px",
-        }}
-      >
-        Uploaded Documents
-      </h2>
-
-      {files.length === 0 ? (
-        <div className="card">
-          <h2>📭 No Documents Found</h2>
-          <p>Upload your first secure document.</p>
+      {/* Content Card */}
+      <div className="dw-content-card">
+        <div className="dw-content-card-header">
+          <h3>
+            <FaFolder size={15} color="#2563EB" /> Repository Files ({files.length})
+          </h3>
+          <span style={{ fontSize: "12px", color: "var(--dw-card-subtext)" }}>
+            Protected by pre-signed short-lived token authentication
+          </span>
         </div>
-      ) : (
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--dw-card-subtext)" }}>
+            Accessing encrypted vault...
+          </div>
+        ) : files.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "48px 20px",
+              background: "var(--dw-inner-card-bg)",
+              borderRadius: "12px",
+              border: "1px dashed var(--dw-card-border)",
+            }}
+          >
+            <FaFolder size={36} color="var(--dw-card-subtext)" style={{ opacity: 0.5, marginBottom: "12px" }} />
+            <h3 style={{ margin: "0 0 6px 0", color: "var(--dw-card-header)" }}>No Documents in Vault</h3>
+            <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "var(--dw-card-subtext)" }}>
+              Upload estate planning documents, property deeds, or digital key backups to preserve them securely.
+            </p>
+            <button
+              type="button"
+              className="dw-btn dw-btn-primary"
+              onClick={() => setUploadModalOpen(true)}
+            >
+              <FaCloudUploadAlt size={14} /> Upload First Document
+            </button>
+          </div>
+        ) : (
+          <div className="dw-table-wrap">
+            <table className="dw-table">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Type</th>
+                  <th>File Size</th>
+                  <th>Uploaded Date</th>
+                  <th>Security Status</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {files.map((file) => {
+                  const isPdf =
+                    file.fileType?.includes("pdf") ||
+                    file.fileName?.toLowerCase().endsWith(".pdf");
+                  return (
+                    <tr key={file._id}>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "8px",
+                              background: isPdf
+                                ? "rgba(239, 68, 68, 0.12)"
+                                : "rgba(16, 185, 129, 0.12)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: isPdf ? "#EF4444" : "#10B981",
+                            }}
+                          >
+                            {isPdf ? <FaFilePdf size={16} /> : <FaKey size={15} />}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{file.fileName}</div>
+                            <div style={{ fontSize: "11px", color: "var(--dw-card-subtext)" }}>
+                              ID: {file._id.slice(-6).toUpperCase()}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: "12px", color: "var(--dw-card-subtext)" }}>
+                          {file.fileType || "application/octet-stream"}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>
+                        {formatFileSize(file.fileSize)}
+                      </td>
+                      <td style={{ fontSize: "12.5px", color: "var(--dw-card-subtext)" }}>
+                        {new Date(file.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <span className="dw-badge-pill dw-badge-green">
+                          <FaShieldAlt size={10} /> Encrypted
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <div style={{ display: "inline-flex", gap: "6px" }}>
+                          <button
+                            type="button"
+                            className="dw-btn dw-btn-outline dw-btn-sm"
+                            title="View Document"
+                            onClick={() => viewFile(file._id)}
+                          >
+                            <FaEye size={12} /> View
+                          </button>
+                          <button
+                            type="button"
+                            className="dw-btn dw-btn-outline dw-btn-sm"
+                            title="Download Document"
+                            onClick={() => viewFile(file._id)}
+                          >
+                            <FaDownload size={12} /> Download
+                          </button>
+                          <button
+                            type="button"
+                            className="dw-btn dw-btn-danger dw-btn-sm"
+                            title="Delete Document"
+                            onClick={() => deleteFile(file._id, file.fileName)}
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Upload Document Modal */}
+      {uploadModalOpen && (
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
-            gap: "20px",
-          }}
+          className="dw-modal-backdrop"
+          onClick={() => !uploading && setUploadModalOpen(false)}
         >
-          {files.map((file) => (
-            <div key={file._id} className="card">
-              <h3>📄 {file.fileName}</h3>
-
-              <p>
-                <strong>Type:</strong> {file.fileType}
-              </p>
-
-              <p>
-                <strong>Size:</strong>{" "}
-                {file.fileSize ? `${file.fileSize} Bytes` : "N/A"}
-              </p>
-
-              <p>
-                <strong>Uploaded:</strong>{" "}
-                {new Date(file.createdAt).toLocaleDateString()}
-              </p>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  marginTop: "15px",
-                }}
+          <div className="dw-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dw-modal-header">
+              <h3>Upload Document to Vault</h3>
+              <button
+                type="button"
+                className="dw-modal-close"
+                disabled={uploading}
+                onClick={() => setUploadModalOpen(false)}
               >
-                {/* View */}
-                <button
-                  onClick={() => viewFile(file._id)}
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpload}>
+              <div className="dw-modal-body">
+                <div
                   style={{
-                    flex: 1,
-                    background: "#16a34a",
-                    color: "white",
-                    border: "none",
-                    padding: "10px",
-                    borderRadius: "8px",
+                    border: "2px dashed var(--dw-card-border)",
+                    borderRadius: "12px",
+                    padding: "30px 20px",
+                    textAlign: "center",
+                    background: "var(--dw-inner-card-bg)",
                     cursor: "pointer",
+                    marginBottom: "16px",
                   }}
+                  onClick={() => document.getElementById("vaultFileInput")?.click()}
                 >
-                  👁 View
-                </button>
+                  <FaCloudUploadAlt
+                    size={42}
+                    color="#2563EB"
+                    style={{ marginBottom: "10px" }}
+                  />
+                  <div style={{ fontWeight: 600, color: "var(--dw-card-header)" }}>
+                    {selectedFile ? selectedFile.name : "Choose a file to deposit"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--dw-card-subtext)",
+                      marginTop: "6px",
+                    }}
+                  >
+                    {selectedFile
+                      ? `Size: ${formatFileSize(selectedFile.size)}`
+                      : "PDF, DOCX, TXT, PNG, JPG, or GPG keys (Max 15MB)"}
+                  </div>
+                  <input
+                    id="vaultFileInput"
+                    type="file"
+                    style={{ display: "none" }}
+                    onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+                  />
+                </div>
 
-                {/* Download */}
-                <button
-                  onClick={() => viewFile(file._id)}
+                <div
                   style={{
-                    flex: 1,
-                    background: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    padding: "10px",
+                    fontSize: "12px",
+                    color: "var(--dw-card-subtext)",
+                    lineHeight: "1.6",
+                    background: "var(--dw-inner-card-bg)",
+                    padding: "12px",
                     borderRadius: "8px",
-                    cursor: "pointer",
                   }}
                 >
-                  ⬇ Download
+                  <FaLock size={11} style={{ marginRight: "6px", color: "#10B981" }} />
+                  Files are transferred directly via secure TLS and encrypted with S3
+                  server-side encryption (SSE-S3). Access is restricted strictly to
+                  your authenticated account.
+                </div>
+              </div>
+              <div className="dw-modal-footer">
+                <button
+                  type="button"
+                  className="dw-btn dw-btn-outline"
+                  disabled={uploading}
+                  onClick={() => setUploadModalOpen(false)}
+                >
+                  Cancel
                 </button>
-
-                {/* Delete */}
                 <button
-                  onClick={() => deleteFile(file._id)}
-                  style={{
-                    flex: 1,
-                    background: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    padding: "10px",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
+                  type="submit"
+                  className="dw-btn dw-btn-primary"
+                  disabled={!selectedFile || uploading}
                 >
-                  🗑 Delete
+                  {uploading ? "Encrypting & Uploading..." : "Deposit File"}
                 </button>
               </div>
-            </div>
-          ))}
+            </form>
+          </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
 

@@ -3,7 +3,7 @@ import AuditLogs from "./pages/AuditLogs";
 import BeneficiaryPortal from "./pages/BeneficiaryPortal";
 import AdminDashboard from "./pages/AdminDashboard";
 import { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
@@ -25,6 +25,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
@@ -44,9 +45,24 @@ function App() {
     };
   }, [navigate]);
 
+  const authenticatedPaths = [
+    "/dashboard",
+    "/profile",
+    "/deadman-settings",
+    "/audit-logs",
+    "/beneficiary-portal",
+    "/admin",
+    "/notifications",
+    "/create-will",
+    "/my-wills",
+    "/assets",
+    "/vault",
+  ];
+  const hidePublicNavbar = authenticatedPaths.includes(location.pathname);
+
   return (
     <>
-      <Navbar />
+      {!hidePublicNavbar && <Navbar />}
       {apiError && (
         <div
           role="alert"

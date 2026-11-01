@@ -1,21 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FaFileContract,
+  FaCoins,
+  FaUsers,
+  FaShieldAlt,
+  FaCheck,
+  FaArrowLeft,
+} from "react-icons/fa";
 import { apiFetch } from "../api";
+import DashboardLayout from "../components/DashboardLayout";
 
 function CreateWill() {
   const navigate = useNavigate();
+  const [existingAssets, setExistingAssets] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     assetName: "",
-    assetType: "",
+    assetType: "Property",
     value: "",
     beneficiaryName: "",
     beneficiaryEmail: "",
     beneficiaryMobile: "",
+    relation: "Nominee",
+    sharePercentage: 100,
     instructions: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    async function loadAssets() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await apiFetch("/api/assets", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setExistingAssets(data.assets || []);
+        }
+      } catch (err) {
+        console.error("Could not prefill assets:", err);
+      }
+    }
+    void loadAssets();
+  }, []);
+
+  const handleAssetSelect = (e) => {
+    const selectedId = e.target.value;
+    if (!selectedId) return;
+    const found = existingAssets.find((a) => a._id === selectedId);
+    if (found) {
+      setFormData((prev) => ({
+        ...prev,
+        assetName: found.assetName,
+        assetType: found.assetType,
+        value: found.value,
+      }));
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -26,7 +70,6 @@ function CreateWill() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const token = localStorage.getItem("token");
 
     try {
@@ -52,8 +95,8 @@ function CreateWill() {
               name: formData.beneficiaryName,
               email: formData.beneficiaryEmail,
               mobile: formData.beneficiaryMobile,
-              relation: "Nominee",
-              sharePercentage: 100,
+              relation: formData.relation || "Nominee",
+              sharePercentage: Number(formData.sharePercentage) || 100,
             },
           ],
           instructions: formData.instructions,
@@ -63,210 +106,282 @@ function CreateWill() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("✅ Digital Will Created Successfully");
-
-        setFormData({
-          title: "",
-          assetName: "",
-          assetType: "",
-          value: "",
-          beneficiaryName: "",
-          beneficiaryEmail: "",
-          beneficiaryMobile: "",
-          instructions: "",
-        });
-
         navigate("/my-wills");
       } else {
-        alert(data.message);
+        alert(data.message || "Failed to create digital will");
       }
     } catch (error) {
-      console.log(error);
-      alert("Error creating will");
+      console.error("Create will error:", error);
+      alert("Error creating digital will.");
     } finally {
       setLoading(false);
     }
   };
 
-  const sectionStyle = {
-    background: "#f8fafc",
-    padding: "20px",
-    borderRadius: "12px",
-    marginBottom: "20px",
-    border: "1px solid #e5e7eb",
-  };
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f4f7fc",
-        padding: "40px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "auto",
-          background: "#ffffff",
-          borderRadius: "20px",
-          padding: "35px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Header */}
-
-        <div style={{ marginBottom: "30px" }}>
-          <h1
-            style={{
-              color: "#001f7f",
-              marginBottom: "10px",
-            }}
-          >
-            📜 Create Digital Will
-          </h1>
-
-          <p
-            style={{
-              color: "#666",
-            }}
-          >
-            Securely create your digital inheritance plan and assign
-            beneficiaries.
+    <DashboardLayout title="Digital Will Management" activeNav="wills">
+      {/* Page Header */}
+      <div className="dw-page-header-row">
+        <div className="dw-page-header-info">
+          <h2>Create Digital Testament</h2>
+          <p>
+            Structure an enforceable succession testament allocating estate
+            assets and appointing certified beneficiaries.
           </p>
         </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Will Information */}
-
-          <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>📄 Will Information</h3>
-
-            <input
-              type="text"
-              name="title"
-              placeholder="Will Title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Asset Information */}
-
-          <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>🏠 Asset Information</h3>
-
-            <input
-              type="text"
-              name="assetName"
-              placeholder="Asset Name"
-              value={formData.assetName}
-              onChange={handleChange}
-              required
-            />
-
-            <br />
-            <br />
-
-            <input
-              type="text"
-              name="assetType"
-              placeholder="Asset Type (Property, Bank Account, Investment...)"
-              value={formData.assetType}
-              onChange={handleChange}
-              required
-            />
-
-            <br />
-            <br />
-
-            <input
-              type="number"
-              name="value"
-              placeholder="Asset Value"
-              value={formData.value}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Beneficiary Information */}
-
-          <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>👤 Beneficiary Information</h3>
-
-            <input
-              type="text"
-              name="beneficiaryName"
-              placeholder="Beneficiary Name"
-              value={formData.beneficiaryName}
-              onChange={handleChange}
-              required
-            />
-
-            <br />
-            <br />
-
-            <input
-              type="email"
-              name="beneficiaryEmail"
-              placeholder="Beneficiary Email"
-              value={formData.beneficiaryEmail}
-              onChange={handleChange}
-              required
-            />
-
-            <br />
-            <br />
-
-            <input
-              type="text"
-              name="beneficiaryMobile"
-              placeholder="Beneficiary Mobile"
-              value={formData.beneficiaryMobile}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Instructions */}
-
-          <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>📝 Final Instructions</h3>
-
-            <textarea
-              name="instructions"
-              rows="5"
-              placeholder="Enter your special instructions..."
-              value={formData.instructions}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Button */}
-
+        <div>
           <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              background: "linear-gradient(135deg,#001f7f,#2563eb)",
-              color: "white",
-              border: "none",
-              padding: "15px",
-              borderRadius: "12px",
-              fontSize: "16px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
+            type="button"
+            className="dw-btn dw-btn-outline"
+            onClick={() => navigate("/my-wills")}
           >
-            {loading ? "Creating Will..." : "📜 Create Digital Will"}
+            <FaArrowLeft size={11} /> Back to Wills
           </button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        <form onSubmit={handleSubmit}>
+          {/* Section 1: Will Meta */}
+          <div className="dw-content-card">
+            <div className="dw-content-card-header">
+              <h3>
+                <FaFileContract size={15} color="#8B5CF6" /> 1. Testament Title &amp; Details
+              </h3>
+            </div>
+            <div className="dw-form-group">
+              <label className="dw-label">Title of Will</label>
+              <input
+                type="text"
+                name="title"
+                required
+                placeholder="e.g. Primary Last Will & Testament (Estate of Santhosh)"
+                value={formData.title}
+                onChange={handleChange}
+                className="dw-input-control"
+              />
+            </div>
+          </div>
+
+          {/* Section 2: Asset Allocation */}
+          <div className="dw-content-card">
+            <div className="dw-content-card-header">
+              <h3>
+                <FaCoins size={15} color="#2563EB" /> 2. Estate Asset Allocation
+              </h3>
+              {existingAssets.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--dw-card-subtext)" }}>
+                    Quick Select:
+                  </span>
+                  <select
+                    onChange={handleAssetSelect}
+                    className="dw-select-control"
+                    style={{ padding: "4px 8px", fontSize: "12px", width: "auto" }}
+                  >
+                    <option value="">-- Choose Existing Asset --</option>
+                    {existingAssets.map((asset) => (
+                      <option key={asset._id} value={asset._id}>
+                        {asset.assetName} (₹{Number(asset.value).toLocaleString()})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="dw-form-group">
+              <label className="dw-label">Asset Name</label>
+              <input
+                type="text"
+                name="assetName"
+                required
+                placeholder="e.g. Residential Villa No. 4"
+                value={formData.assetName}
+                onChange={handleChange}
+                className="dw-input-control"
+              />
+            </div>
+
+            <div className="dw-form-grid-2">
+              <div className="dw-form-group">
+                <label className="dw-label">Asset Type</label>
+                <select
+                  name="assetType"
+                  value={formData.assetType}
+                  onChange={handleChange}
+                  className="dw-select-control"
+                >
+                  <option value="Property">Property / Real Estate</option>
+                  <option value="Bank Account">Bank Account</option>
+                  <option value="Investment">Investment Portfolio</option>
+                  <option value="Vehicle">Vehicle</option>
+                  <option value="Digital Account">Digital Account / Crypto</option>
+                  <option value="Other">Other Valuables</option>
+                </select>
+              </div>
+
+              <div className="dw-form-group">
+                <label className="dw-label">Asset Valuation (₹)</label>
+                <input
+                  type="number"
+                  name="value"
+                  required
+                  min="0"
+                  placeholder="e.g. 1500000"
+                  value={formData.value}
+                  onChange={handleChange}
+                  className="dw-input-control"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Beneficiary Roster */}
+          <div className="dw-content-card">
+            <div className="dw-content-card-header">
+              <h3>
+                <FaUsers size={15} color="#10B981" /> 3. Primary Beneficiary Designation
+              </h3>
+            </div>
+
+            <div className="dw-form-grid-2">
+              <div className="dw-form-group">
+                <label className="dw-label">Beneficiary Full Name</label>
+                <input
+                  type="text"
+                  name="beneficiaryName"
+                  required
+                  placeholder="e.g. Sarah Connor"
+                  value={formData.beneficiaryName}
+                  onChange={handleChange}
+                  className="dw-input-control"
+                />
+              </div>
+
+              <div className="dw-form-group">
+                <label className="dw-label">Beneficiary Email</label>
+                <input
+                  type="email"
+                  name="beneficiaryEmail"
+                  required
+                  placeholder="e.g. sarah.connor@example.com"
+                  value={formData.beneficiaryEmail}
+                  onChange={handleChange}
+                  className="dw-input-control"
+                />
+              </div>
+            </div>
+
+            <div className="dw-form-grid-2">
+              <div className="dw-form-group">
+                <label className="dw-label">Beneficiary Contact Mobile</label>
+                <input
+                  type="tel"
+                  name="beneficiaryMobile"
+                  required
+                  placeholder="e.g. +91 9876543210"
+                  value={formData.beneficiaryMobile}
+                  onChange={handleChange}
+                  className="dw-input-control"
+                />
+              </div>
+
+              <div className="dw-form-group">
+                <label className="dw-label">Relationship / Role</label>
+                <select
+                  name="relation"
+                  value={formData.relation}
+                  onChange={handleChange}
+                  className="dw-select-control"
+                >
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child / Son / Daughter">Child (Son / Daughter)</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Trustee">Trustee / Executor</option>
+                  <option value="Nominee">Nominee</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="dw-form-group">
+              <label className="dw-label">Share Allocation Percentage (%)</label>
+              <input
+                type="number"
+                name="sharePercentage"
+                min="1"
+                max="100"
+                required
+                value={formData.sharePercentage}
+                onChange={handleChange}
+                className="dw-input-control"
+                style={{ maxWidth: "200px" }}
+              />
+            </div>
+          </div>
+
+          {/* Section 4: Succession Instructions & Clauses */}
+          <div className="dw-content-card">
+            <div className="dw-content-card-header">
+              <h3>
+                <FaShieldAlt size={15} color="#F59E0B" /> 4. Instructions &amp; Succession Directives
+              </h3>
+            </div>
+
+            <div className="dw-form-group">
+              <label className="dw-label">Testament Clauses &amp; Execution Terms</label>
+              <textarea
+                name="instructions"
+                rows="4"
+                required
+                placeholder="Specify execution conditions, funeral requests, special trust provisions, or messages for beneficiaries..."
+                value={formData.instructions}
+                onChange={handleChange}
+                className="dw-textarea-control"
+              />
+            </div>
+
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--dw-card-subtext)",
+                lineHeight: "1.6",
+                background: "var(--dw-inner-card-bg)",
+                padding: "12px",
+                borderRadius: "8px",
+                marginTop: "12px",
+              }}
+            >
+              <FaShieldAlt size={12} color="#10B981" style={{ marginRight: "6px" }} />
+              <strong>Legal Security Guarantee:</strong> Inactivity triggers will never
+              release inheritance details automatically. Official administrator review and
+              death certificate verification are strictly required before beneficiary release.
+            </div>
+          </div>
+
+          {/* Submit Actions */}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginBottom: "30px" }}>
+            <button
+              type="button"
+              className="dw-btn dw-btn-outline"
+              onClick={() => navigate("/my-wills")}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="dw-btn dw-btn-primary"
+              disabled={loading}
+              style={{ padding: "10px 24px" }}
+            >
+              <FaCheck size={12} />
+              {loading ? "Generating Digital Will..." : "Finalize & Register Will"}
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
