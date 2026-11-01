@@ -191,7 +191,7 @@ function Vault() {
       <div className="dw-content-card">
         <div className="dw-content-card-header">
           <h3>
-            <FaFolder size={15} color="#2563EB" /> Repository Files ({files.length})
+            <FaFolder size={15} color="#2563EB" /> Vault Documents ({files.length})
           </h3>
           <span style={{ fontSize: "12px", color: "var(--dw-card-subtext)" }}>
             Protected by pre-signed short-lived token authentication
