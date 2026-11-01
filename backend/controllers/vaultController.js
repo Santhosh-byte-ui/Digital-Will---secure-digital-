@@ -46,10 +46,11 @@ const resolveFileKey = (file) => {
 // ======================
 const uploadFile = async (req, res) => {
   let uploadedKey;
+  let s3Uploaded = false;
   try {
     if (!req.file) {
       return res.status(400).json({
-        message: "No file uploaded",
+        message: "No file uploaded. Please select a document to upload.",
       });
     }
 
@@ -76,6 +77,7 @@ const uploadFile = async (req, res) => {
         ContentType: detectedType.mime,
       }),
     );
+    s3Uploaded = true;
 
     const newFile = await Vault.create({
       user: req.user.id,
@@ -98,7 +100,7 @@ const uploadFile = async (req, res) => {
       file: newFile,
     });
   } catch (error) {
-    if (uploadedKey) {
+    if (s3Uploaded && uploadedKey) {
       await s3
         .send(
           new DeleteObjectCommand({
@@ -106,9 +108,34 @@ const uploadFile = async (req, res) => {
             Key: uploadedKey,
           }),
         )
-        .catch(() => {});
+        .catch((cleanupErr) => {
+          console.error(`Orphaned S3 object cleanup failed: ${cleanupErr.name}`);
+        });
     }
-    console.error(`Vault upload failed (${error.name}).`);
+
+    console.error(`[Vault Upload Error] ${error.name || "Error"}: ${error.message || "Failed"}`);
+
+    if (error.name === "SignatureDoesNotMatch") {
+      return res.status(500).json({
+        message:
+          "Storage service authentication failed (SignatureDoesNotMatch). Please verify that AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY match in your backend configuration.",
+      });
+    }
+
+    if (error.name === "NoSuchBucket") {
+      return res.status(500).json({
+        message:
+          "Configured storage bucket does not exist. Please verify your AWS S3 bucket configuration.",
+      });
+    }
+
+    if (error.name === "AccessDenied") {
+      return res.status(500).json({
+        message:
+          "Access denied by storage service. Please check your AWS IAM S3 permissions.",
+      });
+    }
+
     res.status(500).json({
       message: "File upload failed. Please try again later.",
     });
@@ -125,6 +152,7 @@ const getFiles = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     res.status(200).json({
+      count: files.length,
       files,
     });
   } catch (error) {

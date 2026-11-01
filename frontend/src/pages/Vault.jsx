@@ -20,6 +20,7 @@ function Vault() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -44,15 +45,22 @@ function Vault() {
     void fetchFiles();
   }, [refreshKey]);
 
+  const openUploadModal = () => {
+    setUploadError("");
+    setSelectedFile(null);
+    setUploadModalOpen(true);
+  };
+
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
-      alert("Please select a document to upload");
+      setUploadError("Please select a document to upload");
       return;
     }
 
     try {
       setUploading(true);
+      setUploadError("");
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", selectedFile);
@@ -69,11 +77,11 @@ function Vault() {
         setUploadModalOpen(false);
         setRefreshKey((k) => k + 1);
       } else {
-        alert(data.message || "Upload failed");
+        setUploadError(data.message || "Upload failed");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Upload failed. Ensure server and storage connectivity.");
+      setUploadError("Upload failed. Ensure server and storage connectivity.");
     } finally {
       setUploading(false);
     }
@@ -141,7 +149,7 @@ function Vault() {
           <button
             type="button"
             className="dw-btn dw-btn-primary"
-            onClick={() => setUploadModalOpen(true)}
+            onClick={openUploadModal}
           >
             <FaCloudUploadAlt size={14} /> Upload New Document
           </button>
@@ -220,7 +228,7 @@ function Vault() {
             <button
               type="button"
               className="dw-btn dw-btn-primary"
-              onClick={() => setUploadModalOpen(true)}
+              onClick={openUploadModal}
             >
               <FaCloudUploadAlt size={14} /> Upload First Document
             </button>
@@ -344,6 +352,23 @@ function Vault() {
             </div>
             <form onSubmit={handleUpload}>
               <div className="dw-modal-body">
+                {uploadError && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      backgroundColor: "var(--dw-danger-light)",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      color: "var(--dw-danger)",
+                      borderRadius: "6px",
+                      fontSize: "0.82rem",
+                      marginBottom: "14px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {uploadError}
+                  </div>
+                )}
+
                 <div
                   style={{
                     border: "2px dashed var(--dw-card-border)",
@@ -373,13 +398,17 @@ function Vault() {
                   >
                     {selectedFile
                       ? `Size: ${formatFileSize(selectedFile.size)}`
-                      : "PDF, DOCX, TXT, PNG, JPG, or GPG keys (Max 15MB)"}
+                      : "PDF, PNG, or JPEG documents (Max 10MB)"}
                   </div>
                   <input
                     id="vaultFileInput"
                     type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
                     style={{ display: "none" }}
-                    onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+                    onChange={(e) => {
+                      setUploadError("");
+                      setSelectedFile(e.target.files[0] || null);
+                    }}
                   />
                 </div>
 
