@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { FaShieldAlt, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { apiFetch } from "../api";
 
 function Login() {
@@ -8,13 +8,16 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleLogin(event) {
     event.preventDefault();
+    setErrorMessage("");
 
     if (!email || !password) {
-      alert("Please fill all fields!");
+      setErrorMessage("Please enter both your email address and password.");
       return;
     }
 
@@ -23,15 +26,10 @@ function Login() {
 
       const response = await apiFetch("/api/auth/login", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -41,22 +39,11 @@ function Login() {
         localStorage.setItem("user", JSON.stringify(data.user));
         navigate("/dashboard", { replace: true });
       } else {
-        alert(data.message || "Login failed. Please try again.");
+        setErrorMessage(data.message || "Invalid credentials. Please verify your email and password.");
       }
     } catch (error) {
-      console.log(error);
-
-      const isOfflineOrNetworkError =
-        error instanceof TypeError &&
-        (error.message.includes("fetch") ||
-          error.message.includes("NetworkError") ||
-          error.message.includes("Failed"));
-
-      alert(
-        isOfflineOrNetworkError
-          ? "Unable to connect to the backend server. Please verify the backend is running on http://localhost:5000."
-          : "Server Error: Unable to complete login. Please check backend logs.",
-      );
+      console.error("Login network error:", error);
+      setErrorMessage("Unable to connect to the authentication server. Please ensure the backend is running.");
     } finally {
       setLoading(false);
     }
@@ -66,331 +53,209 @@ function Login() {
     <div
       style={{
         minHeight: "100vh",
-
-        background: "linear-gradient(135deg,#020617,#0f172a,#1e3a8a)",
-
+        backgroundColor: "var(--dw-bg-primary)",
         display: "flex",
-
-        justifyContent: "center",
-
+        flexDirection: "column",
         alignItems: "center",
-
-        padding: "20px",
-
-        boxSizing: "border-box",
-
-        overflowX: "hidden",
+        justifyContent: "center",
+        padding: "32px 16px",
       }}
     >
+      {/* Brand Header */}
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <Link
+          to="/"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "10px",
+            textDecoration: "none",
+          }}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              backgroundColor: "var(--dw-primary)",
+              color: "#FFFFFF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <FaShieldAlt size={18} />
+          </div>
+          <span
+            style={{
+              fontFamily: "var(--dw-font-heading)",
+              fontSize: "1.35rem",
+              fontWeight: 700,
+              color: "var(--dw-text-main)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            DigitalWill
+          </span>
+        </Link>
+        <p style={{ marginTop: "6px", fontSize: "0.88rem" }}>
+          Secure Digital Estate &amp; Testamentary Succession Console
+        </p>
+      </div>
+
+      {/* Auth Card */}
       <div
         style={{
           width: "100%",
-
-          maxWidth: "1200px",
-
-          display: "grid",
-
-          gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
-
-          gap: "40px",
-
-          alignItems: "center",
+          maxWidth: "420px",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid var(--dw-border)",
+          borderRadius: "8px",
+          boxShadow: "var(--dw-card-shadow)",
+          padding: "32px 28px",
         }}
       >
-        {/* LEFT SECTION */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            x: -80,
-          }}
-          animate={{
-            opacity: 1,
-            x: 0,
-          }}
-          transition={{
-            duration: 0.8,
-          }}
-          style={{
-            color: "white",
-
-            padding: "20px",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "clamp(32px,5vw,55px)",
-
-              fontWeight: "800",
-
-              lineHeight: "1.2",
-            }}
-          >
-            Digital Legacy &
-            <br />
-            Inheritance Platform
-          </h1>
-
-          <p
-            style={{
-              fontSize: "20px",
-
-              lineHeight: "1.7",
-
-              opacity: "0.85",
-            }}
-          >
-            Securely manage digital assets, legal documents, beneficiary records
-            and testament information through an enterprise-grade inheritance
-            management platform.
+        <div style={{ marginBottom: "22px" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "4px" }}>
+            Sign In to Your Account
+          </h2>
+          <p style={{ fontSize: "0.85rem", margin: 0 }}>
+            Enter your credentials to access your estate inventory.
           </p>
+        </div>
 
+        {errorMessage && (
           <div
             style={{
-              marginTop: "35px",
-
-              display: "flex",
-
-              flexDirection: "column",
-
-              gap: "18px",
-
-              fontSize: "18px",
+              padding: "10px 14px",
+              backgroundColor: "var(--dw-danger-light)",
+              border: "1px solid rgba(198, 71, 71, 0.25)",
+              color: "var(--dw-danger)",
+              borderRadius: "6px",
+              fontSize: "0.85rem",
+              marginBottom: "18px",
+              lineHeight: "1.4",
             }}
           >
-            <div>🔐 Enterprise-Grade Document Security</div>
-
-            <div>📜 Digital Will Creation & Management</div>
-
-            <div>👥 Beneficiary & Nominee Administration</div>
-
-            <div>🏦 Asset Portfolio Management</div>
-
-            <div>📄 Secure PDF Will Generation</div>
-
-            <div>✔ Verified Inheritance Distribution</div>
+            {errorMessage}
           </div>
-        </motion.div>
+        )}
 
-        {/* RIGHT LOGIN CARD */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            x: 80,
-          }}
-          animate={{
-            opacity: 1,
-            x: 0,
-          }}
-          transition={{
-            duration: 0.8,
-          }}
-          style={{
-            background: "rgba(255,255,255,0.96)",
-
-            borderRadius: "25px",
-
-            padding: "40px",
-
-            boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
-
-            width: "100%",
-
-            boxSizing: "border-box",
-          }}
-        >
-          {/* LOGIN CONTENT */}
-
-          <div
-            style={{
-              textAlign: "center",
-
-              marginBottom: "30px",
-            }}
-          >
-            <h1
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: "16px" }}>
+            <label
               style={{
-                color: "#001f7f",
-
-                fontSize: "36px",
-
-                marginBottom: "10px",
+                display: "block",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: "var(--dw-text-main)",
+                marginBottom: "6px",
               }}
             >
-              🔑 Login
-            </h1>
-
-            <p
-              style={{
-                color: "#666",
-
-                fontSize: "16px",
-              }}
-            >
-              Access your Digital Will account
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin}>
-            <motion.input
-              whileFocus={{
-                scale: 1.02,
-              }}
+              Email Address
+            </label>
+            <input
               type="email"
-              aria-label="Email Address"
-              autoComplete="email"
               required
-              placeholder="Email Address"
+              autoFocus
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-
-                padding: "15px",
-
-                borderRadius: "12px",
-
-                border: "1px solid #ddd",
-
-                marginBottom: "20px",
-
-                fontSize: "15px",
-
-                boxSizing: "border-box",
-              }}
+              disabled={loading}
             />
+          </div>
 
-            <motion.input
-              whileFocus={{
-                scale: 1.02,
-              }}
-              type="password"
-              aria-label="Password"
-              autoComplete="current-password"
-              required
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-
-                padding: "15px",
-
-                borderRadius: "12px",
-
-                border: "1px solid #ddd",
-
-                fontSize: "15px",
-
-                boxSizing: "border-box",
-              }}
-            />
-
-            <div
-              style={{
-                textAlign: "right",
-
-                marginTop: "15px",
-
-                marginBottom: "25px",
-              }}
-            >
-              <Link
-                to="/forgot-password"
+          <div style={{ marginBottom: "18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <label
                 style={{
-                  color: "#001f7f",
-
-                  fontWeight: "700",
-
-                  textDecoration: "none",
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  color: "var(--dw-text-main)",
+                  margin: 0,
                 }}
               >
-                Forgot Password?
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                style={{ fontSize: "0.8rem", color: "var(--dw-primary)" }}
+              >
+                Forgot password?
               </Link>
             </div>
-
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-              }}
-              whileTap={{
-                scale: 0.95,
-              }}
-              type="submit"
-              disabled={loading}
-              style={{
-                width: "100%",
-
-                padding: "15px",
-
-                borderRadius: "12px",
-
-                border: "none",
-
-                background: "linear-gradient(135deg,#001f7f,#2563eb)",
-
-                color: "white",
-
-                fontSize: "17px",
-
-                fontWeight: "700",
-
-                cursor: "pointer",
-              }}
-            >
-              {loading ? "Logging in..." : "🔑 Login"}
-            </motion.button>
-          </form>
-
-          <div
-            style={{
-              textAlign: "center",
-
-              marginTop: "25px",
-            }}
-          >
-            <p
-              style={{
-                color: "#555",
-              }}
-            >
-              Don't have an account?
-            </p>
-
-            <Link
-              to="/register"
-              style={{
-                color: "#001f7f",
-
-                fontWeight: "700",
-
-                textDecoration: "none",
-              }}
-            >
-              Create Account
-            </Link>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="Enter account password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                style={{ paddingRight: "38px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "var(--dw-secondary)",
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+              </button>
+            </div>
           </div>
 
-          <div
-            style={{
-              textAlign: "center",
-
-              marginTop: "20px",
-            }}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: "100%", padding: "10px" }}
           >
-            <Link
-              to="/"
-              style={{
-                color: "#666",
+            <FaLock size={11} /> {loading ? "Authenticating..." : "Sign In"}
+          </button>
+        </form>
 
-                textDecoration: "none",
-              }}
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </motion.div>
+        <div
+          style={{
+            marginTop: "22px",
+            paddingTop: "18px",
+            borderTop: "1px solid var(--dw-border)",
+            textAlign: "center",
+            fontSize: "0.85rem",
+            color: "var(--dw-text-muted)",
+          }}
+        >
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/register"
+            style={{ fontWeight: 600, color: "var(--dw-primary)" }}
+          >
+            Create an account
+          </Link>
+        </div>
+      </div>
+
+      {/* Compliance footer note */}
+      <div
+        style={{
+          marginTop: "24px",
+          fontSize: "0.78rem",
+          color: "var(--dw-text-muted)",
+          textAlign: "center",
+        }}
+      >
+        Protected by 256-bit encryption &bull; JWT Authenticated &bull; HIPAA &amp; SOC-2 aligned
       </div>
     </div>
   );

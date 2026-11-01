@@ -1,27 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  FaShieldAlt,
   FaFileContract,
   FaCoins,
   FaUsers,
-  FaEllipsisV,
-  FaChevronRight,
-  FaHeartbeat,
-  FaEnvelope,
-  FaPhoneAlt,
+  FaFolder,
+  FaShieldAlt,
+  FaClock,
   FaPlus,
+  FaArrowRight,
+  FaEye,
   FaFilePdf,
-  FaKey,
 } from "react-icons/fa";
 import { apiFetch } from "../api";
 import DashboardLayout from "../components/DashboardLayout";
-import "./Dashboard.css";
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  // Authenticated user details
   const [user] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
@@ -31,16 +27,13 @@ function Dashboard() {
     }
   });
 
-  const [pingDaysText, setPingDaysText] = useState("Next ping in 4 days");
-
-  // Dashboard Aggregates & Live Data
   const [stats, setStats] = useState({
     totalAssets: 0,
     totalBeneficiaries: 0,
     totalWills: 0,
     totalDocuments: 0,
     totalEstateValue: 0,
-    pendingDeathVerifications: 3,
+    pendingDeathVerifications: 0,
     assetDistribution: [],
     recentActivities: [],
     deadManStatus: null,
@@ -56,7 +49,7 @@ function Dashboard() {
       if (!token) return;
 
       try {
-        // 1. Fetch dashboard stats
+        // 1. Fetch live dashboard stats
         const response = await apiFetch("/api/dashboard", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -74,14 +67,6 @@ function Dashboard() {
             ...prev,
             ...data,
           }));
-
-          if (data.deadManStatus?.lastActiveDate) {
-            const lastActive = new Date(data.deadManStatus.lastActiveDate).getTime();
-            const daysConfig = data.deadManStatus.inactivityDays || 30;
-            const elapsed = Math.floor((Date.now() - lastActive) / (1000 * 60 * 60 * 24));
-            const remaining = Math.max(1, daysConfig - elapsed);
-            setPingDaysText(`Next ping in ${remaining} days`);
-          }
         }
 
         // 2. Fetch wills to display real latest will
@@ -116,564 +101,443 @@ function Dashboard() {
             setBeneficiariesList(benData.beneficiaries);
           }
         }
-
-        // 5. If admin, fetch real pending death verifications count
-        if (user?.role === "admin") {
-          const adminRes = await apiFetch("/api/admin/stats", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (adminRes.ok) {
-            const adminData = await adminRes.json();
-            setStats((prev) => ({
-              ...prev,
-              pendingDeathVerifications: adminData.pendingRequests ?? 3,
-            }));
-          }
-        }
       } catch (error) {
         console.error("Dashboard data load error:", error);
       }
     }
 
     void loadDashboardData();
-  }, [navigate, user?.role]);
+  }, [navigate]);
 
-  // Formatted Metric Displays (matching exact reference mockup values or live data)
-  const displayWills =
-    stats.totalWills > 0 ? stats.totalWills.toLocaleString() : "1,482";
-
-  const displayAssets =
-    stats.totalEstateValue > 0
-      ? stats.totalEstateValue >= 1000000
-        ? `${(stats.totalEstateValue / 1000000).toFixed(1)}M`
-        : `₹${stats.totalEstateValue.toLocaleString()}`
-      : "4.8M";
-
-  const displayBeneficiaries =
-    stats.totalBeneficiaries > 0
-      ? stats.totalBeneficiaries.toLocaleString()
-      : "2,109";
-
-  const displayPendingVerifications = stats.pendingDeathVerifications ?? 3;
-
-  // Active Will Presentation Data
-  const willTitle = latestWill?.title || "Primary Last Will & Testament";
-  const willStatus = latestWill?.status || "Draft";
-  const willTimestamp = latestWill?.updatedAt
-    ? `Updated ${new Date(latestWill.updatedAt).toLocaleDateString()}`
-    : "Last edited 2 hours ago";
-
-  // Dead Man Inactivity Countdown
+  const userName = user?.name || "Client";
   const isDeadManActive = stats.deadManStatus?.deadManEnabled || false;
+  const inactivityDays = stats.deadManStatus?.inactivityDays || 30;
 
   return (
-    <DashboardLayout title="Dashboard" activeNav="dashboard">
-      {/* =====================================================
-          1. TOP METRICS ROW (4 Cards)
-          ===================================================== */}
-      <section aria-label="Key Estate Metrics">
-        <div className="dw-section-label">Top Metrics</div>
-        <div className="dw-metrics-grid">
-          {/* Metric 1: Active Wills */}
-          <div className="dw-metric-card">
-            <div className="dw-metric-header">
-              <span className="dw-metric-title">Active Wills</span>
-              <FaFileContract className="dw-metric-icon purple" />
-            </div>
-            <div className="dw-metric-value">{displayWills}</div>
-          </div>
+    <DashboardLayout title="Estate Overview" activeNav="dashboard">
+      {/* Page Header / Welcome */}
+      <div className="page-header">
+        <div>
+          <h2 className="page-header-title">Welcome, {userName}</h2>
+          <p className="page-header-desc">
+            Monitor your registered testamentary wills, digital asset allocations,
+            and succession readiness from your legal console.
+          </p>
+        </div>
+        <div className="page-header-actions">
+          <Link to="/create-will" className="btn btn-primary">
+            <FaPlus size={11} /> Create Digital Will
+          </Link>
+          <Link to="/assets" className="btn btn-secondary">
+            <FaCoins size={11} /> Add Asset
+          </Link>
+        </div>
+      </div>
 
-          {/* Metric 2: Secured Assets */}
-          <div className="dw-metric-card">
-            <div className="dw-metric-header">
-              <span className="dw-metric-title">Secured Assets</span>
-              <FaCoins className="dw-metric-icon blue" />
-            </div>
-            <div className="dw-metric-value">{displayAssets}</div>
+      {/* Real Top Metrics Row (100% Real Backend Data) */}
+      <div className="metrics-row">
+        {/* Metric 1: Digital Wills */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <span>Digital Wills</span>
+            <FaFileContract className="metric-card-icon" />
           </div>
-
-          {/* Metric 3: Assigned Beneficiaries */}
-          <div className="dw-metric-card">
-            <div className="dw-metric-header">
-              <span className="dw-metric-title">Assigned Beneficiaries</span>
-              <FaUsers className="dw-metric-icon indigo" />
-            </div>
-            <div className="dw-metric-value">{displayBeneficiaries}</div>
-          </div>
-
-          {/* Metric 4: Pending Death Verifications */}
-          <div className="dw-metric-card">
-            <div className="dw-metric-header">
-              <span className="dw-metric-title">
-                Pending Death Verifications
-              </span>
-              <FaShieldAlt
-                className="dw-metric-icon"
-                style={{ color: "#F59E0B" }}
-              />
-            </div>
-            <div className="dw-metric-value">{displayPendingVerifications}</div>
+          <div className="metric-card-value">{stats.totalWills}</div>
+          <div className="metric-card-subtext">
+            {latestWill ? `Latest: ${latestWill.status}` : "No will drafted"}
           </div>
         </div>
-      </section>
 
-      {/* =====================================================
-          2. TWO-COLUMN INTERACTIVE CONTENT GRID
-          ===================================================== */}
-      <div className="dw-content-grid">
-        {/* ================= LEFT COLUMN ================= */}
-        <div className="dw-col-left">
-          {/* Card 1: Interactive Will Builder */}
-          <div className="dw-card">
-            <div className="dw-card-header-row">
-              <h2 className="dw-card-heading">Interactive Will Builder</h2>
-              <button
-                type="button"
-                className="dw-card-menu-btn"
-                title="Options"
-                onClick={() => navigate("/create-will")}
-              >
-                <FaEllipsisV size={13} />
-              </button>
+        {/* Metric 2: Asset Valuation */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <span>Estate Assets</span>
+            <FaCoins className="metric-card-icon" />
+          </div>
+          <div className="metric-card-value">
+            {stats.totalEstateValue > 0
+              ? `₹${stats.totalEstateValue.toLocaleString()}`
+              : `${stats.totalAssets} Registered`}
+          </div>
+          <div className="metric-card-subtext">
+            {stats.totalAssets} active items in inventory
+          </div>
+        </div>
+
+        {/* Metric 3: Designated Beneficiaries */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <span>Nominated Beneficiaries</span>
+            <FaUsers className="metric-card-icon" />
+          </div>
+          <div className="metric-card-value">{stats.totalBeneficiaries}</div>
+          <div className="metric-card-subtext">
+            {stats.totalBeneficiaries > 0 ? "Allocated in roster" : "No nominees added"}
+          </div>
+        </div>
+
+        {/* Metric 4: Vault Documents */}
+        <div className="metric-card">
+          <div className="metric-card-label">
+            <span>Vault Documents</span>
+            <FaFolder className="metric-card-icon" />
+          </div>
+          <div className="metric-card-value">{stats.totalDocuments}</div>
+          <div className="metric-card-subtext">AWS S3 Encrypted (SSE-256)</div>
+        </div>
+      </div>
+
+      {/* Grid: 2 Columns */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1.4fr 1fr",
+          gap: "24px",
+          alignItems: "start",
+        }}
+      >
+        {/* Left Column: Will Status & Vault Documents */}
+        <div>
+          {/* Card 1: Active Will Status */}
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">
+                <FaFileContract size={14} color="#3157A4" /> Testamentary Status
+              </h3>
+              {latestWill && (
+                <span
+                  className={`badge ${
+                    latestWill.status === "Active"
+                      ? "badge-success"
+                      : "badge-warning"
+                  }`}
+                >
+                  {latestWill.status}
+                </span>
+              )}
             </div>
 
-            <div className="dw-will-inner-card">
-              <div className="dw-will-doc-row">
-                <div className="dw-will-icon-wrap">
-                  <FaFileContract size={16} />
-                </div>
-                <div className="dw-will-details">
-                  <div className="dw-will-title-row">
-                    <span className="dw-will-name">{willTitle}</span>
-                    <span
-                      className={`dw-badge-status ${
-                        willStatus === "Active"
-                          ? "status-verified"
-                          : "status-draft"
-                      }`}
-                    >
-                      {willStatus}
+            <div className="content-card-body">
+              {latestWill ? (
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "14px",
+                    }}
+                  >
+                    <div>
+                      <h4 style={{ margin: "0 0 4px 0", fontSize: "1.05rem" }}>
+                        {latestWill.title}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "0.82rem" }}>
+                        Last modified:{" "}
+                        {new Date(latestWill.updatedAt || latestWill.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="badge badge-neutral">
+                      Verification: {latestWill.deathVerificationStatus}
                     </span>
                   </div>
-                  <div className="dw-will-timestamp">{willTimestamp}</div>
-                </div>
-              </div>
 
-              <div className="dw-will-actions-row">
-                <button
-                  type="button"
-                  className="dw-btn-secondary"
-                  onClick={() => navigate("/beneficiary-portal")}
-                >
-                  Manage Testators
-                </button>
-                <button
-                  type="button"
-                  className="dw-btn-secondary"
-                  onClick={() => navigate("/create-will")}
-                >
-                  Edit Clauses
-                </button>
-              </div>
-
-              <div className="dw-progress-wrap">
-                <div className="dw-progress-bar-track">
                   <div
-                    className="dw-progress-bar-fill"
-                    style={{ width: "75%" }}
-                  />
-                </div>
-                <div className="dw-progress-label-row">
-                  <span className="dw-progress-text">Progress</span>
-                  <span className="dw-progress-pct">75% Complete</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Beneficiary Roster */}
-          <div className="dw-card">
-            <div className="dw-card-header-row">
-              <h2 className="dw-card-heading">Beneficiary roster</h2>
-              <div className="dw-pill-badges-group">
-                <span className="dw-badge-pill-status">Status</span>
-                <span className="dw-badge-pill-kd">Kd</span>
-                <Link
-                  to="/beneficiary-portal"
-                  className="dw-pill-arrow-btn"
-                  title="View full roster"
-                >
-                  <FaChevronRight size={11} />
-                </Link>
-              </div>
-            </div>
-
-            <div className="dw-roster-list">
-              {beneficiariesList.length > 0 ? (
-                beneficiariesList.slice(0, 2).map((ben, idx) => (
-                  <div key={ben._id || idx} className="dw-roster-row">
-                    <div className="dw-roster-avatar female">
-                      {(ben.name || "B").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="dw-roster-info">
-                      <span className="dw-roster-name">{ben.name}</span>
-                      <span className="dw-roster-role">
-                        ({ben.relation || "Nominee"}) -{" "}
-                        {ben.sharePercentage || 50}% Share
+                    style={{
+                      background: "var(--dw-bg-primary)",
+                      padding: "12px 16px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--dw-border)",
+                      display: "flex",
+                      gap: "24px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontSize: "0.75rem", color: "var(--dw-text-muted)", display: "block" }}>
+                        Allocated Assets
                       </span>
+                      <strong style={{ fontSize: "1rem" }}>
+                        {latestWill.assets?.length || 0}
+                      </strong>
                     </div>
-                    <span className="dw-badge-rel">Rel</span>
+                    <div>
+                      <span style={{ fontSize: "0.75rem", color: "var(--dw-text-muted)", display: "block" }}>
+                        Beneficiaries
+                      </span>
+                      <strong style={{ fontSize: "1rem" }}>
+                        {latestWill.beneficiaries?.length || 0}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "0.75rem", color: "var(--dw-text-muted)", display: "block" }}>
+                        Execution Directives
+                      </span>
+                      <strong style={{ fontSize: "1rem" }}>Recorded</strong>
+                    </div>
                   </div>
-                ))
+
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <Link to="/my-wills" className="btn btn-secondary btn-sm">
+                      <FaEye size={11} /> Review Will Details
+                    </Link>
+                    <Link to="/my-wills" className="btn btn-primary btn-sm">
+                      <FaFilePdf size={11} /> Download PDF
+                    </Link>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <div className="dw-roster-row">
-                    <div className="dw-roster-avatar female">SC</div>
-                    <div className="dw-roster-info">
-                      <span className="dw-roster-name">Sarah Connor</span>
-                      <span className="dw-roster-role">(Spouse) - 50% Share</span>
-                    </div>
-                  </div>
-                  <div className="dw-roster-row">
-                    <div className="dw-roster-avatar male">JC</div>
-                    <div className="dw-roster-info">
-                      <span className="dw-roster-name">John Connor</span>
-                      <span className="dw-roster-role">(Son) - 50% Share</span>
-                    </div>
-                    <span className="dw-badge-rel">Rel</span>
-                  </div>
-                </>
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <FaFileContract
+                    size={32}
+                    color="#94A3B8"
+                    style={{ marginBottom: "10px" }}
+                  />
+                  <h4 style={{ margin: "0 0 4px 0" }}>No Digital Will Created</h4>
+                  <p style={{ margin: "0 0 14px 0", fontSize: "0.85rem" }}>
+                    Draft your first legally structured will to distribute your estate assets.
+                  </p>
+                  <Link to="/create-will" className="btn btn-primary btn-sm">
+                    <FaPlus size={10} /> Draft Digital Will
+                  </Link>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Card 3: Dead Man's Switch / Inactivity Status */}
-          <div className="dw-card">
-            <div className="dw-card-header-row">
-              <h2 className="dw-card-heading">
-                Dead Man&apos;s Switch / Inactivity Status
-              </h2>
-              <button
-                type="button"
-                className="dw-card-menu-btn"
-                title="Configure switch"
-                onClick={() => navigate("/deadman-settings")}
-              >
-                <FaEllipsisV size={13} />
-              </button>
+          {/* Card 2: Vault Documents Overview */}
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">
+                <FaFolder size={14} color="#3157A4" /> Document Vault ({vaultFiles.length})
+              </h3>
+              <Link to="/vault" className="btn btn-secondary btn-sm">
+                View All Documents
+              </Link>
             </div>
 
-            <div className="dw-pulse-banner">
-              <div className="dw-pulse-icon-box">
-                <FaHeartbeat size={15} />
-              </div>
-              <div className="dw-pulse-content">
-                <span className="dw-pulse-title">
-                  {isDeadManActive ? pingDaysText : "Next ping in 4 days"}
-                </span>
-                <span className="dw-pulse-sub">
-                  Trigger config &amp; email/SMS verification channels
-                </span>
-              </div>
-            </div>
-
-            <div className="dw-deadman-config-box">
-              <div className="dw-deadman-left">
-                <div className="dw-deadman-icon-wrap">
-                  <FaEnvelope size={13} />
-                </div>
-                <div className="dw-deadman-text">
-                  <span className="dw-deadman-title">Trigger config &amp;</span>
-                  <span className="dw-deadman-sub">Email/SMS channels</span>
-                </div>
-              </div>
-
-              <div className="dw-deadman-right">
-                <span className="dw-badge-pill-status">Status</span>
-                <button
-                  type="button"
-                  className="dw-deadman-phone-btn"
-                  title="Verified emergency contact phone on file"
-                >
-                  <FaPhoneAlt size={11} />
-                </button>
-                <Link
-                  to="/deadman-settings"
-                  className="dw-deadman-arrow-btn"
-                  title="Manage Inactivity Settings"
-                >
-                  <FaChevronRight size={11} />
+            {vaultFiles.length === 0 ? (
+              <div className="empty-state">
+                <FaFolder className="empty-state-icon" />
+                <h4 className="empty-state-title">No Documents in Vault</h4>
+                <p className="empty-state-desc">
+                  Store property deeds, identity proofs, and estate records securely on AWS S3.
+                </p>
+                <Link to="/vault" className="btn btn-primary btn-sm">
+                  Upload Document
                 </Link>
               </div>
-            </div>
+            ) : (
+              <div className="table-responsive" style={{ border: "none", borderRadius: 0 }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Document</th>
+                      <th>Type</th>
+                      <th>Size</th>
+                      <th>Uploaded</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vaultFiles.slice(0, 4).map((doc) => (
+                      <tr key={doc._id}>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{doc.fileName}</div>
+                        </td>
+                        <td>
+                          <span className="badge badge-neutral">
+                            {doc.fileType?.includes("pdf") ? "PDF" : "Document"}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: "0.82rem", color: "var(--dw-text-muted)" }}>
+                          {doc.fileSize ? `${(doc.fileSize / 1024).toFixed(1)} KB` : "—"}
+                        </td>
+                        <td style={{ fontSize: "0.82rem", color: "var(--dw-text-muted)" }}>
+                          {new Date(doc.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ================= RIGHT COLUMN ================= */}
-        <div className="dw-col-right">
-          {/* Card 4: Secure Asset Allocation & World Distribution */}
-          <div className="dw-card">
-            <div className="dw-card-header-row">
-              <h2 className="dw-card-heading">Secure Asset Allocation</h2>
-              <button
-                type="button"
-                className="dw-card-menu-btn"
-                title="Asset Options"
-                onClick={() => navigate("/assets")}
+        {/* Right Column: Inactivity Monitoring & Beneficiary Roster */}
+        <div>
+          {/* Card 3: Inactivity / Dead Man's Switch Status */}
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">
+                <FaClock size={14} color="#3157A4" /> Inactivity Monitoring
+              </h3>
+              <span
+                className={`badge ${
+                  isDeadManActive ? "badge-success" : "badge-neutral"
+                }`}
               >
-                <FaEllipsisV size={13} />
-              </button>
+                {isDeadManActive ? "Armed" : "Disabled"}
+              </span>
             </div>
 
-            <div className="dw-map-section">
-              <div className="dw-map-canvas-wrap">
-                <svg
-                  className="dw-world-map-svg"
-                  viewBox="0 0 1000 480"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="World Asset Allocation Map"
-                >
-                  <path
-                    d="M170 120 C 180 80, 240 70, 310 90 C 330 110, 350 140, 320 180 C 290 210, 240 230, 200 210 C 160 190, 150 150, 170 120 Z"
-                    className="dw-map-continent"
-                  />
-                  <path
-                    d="M260 250 C 290 270, 310 320, 300 370 C 280 410, 250 430, 220 390 C 200 350, 220 290, 260 250 Z"
-                    className="dw-map-continent"
-                  />
-                  <path
-                    d="M470 100 C 510 80, 560 90, 580 130 C 570 160, 540 180, 500 170 C 470 150, 450 120, 470 100 Z"
-                    className="dw-map-continent"
-                  />
-                  <path
-                    d="M480 190 C 530 190, 560 240, 550 300 C 530 350, 490 360, 460 310 C 440 260, 450 200, 480 190 Z"
-                    className="dw-map-continent"
-                  />
-                  <path
-                    d="M600 90 C 680 70, 780 80, 830 120 C 850 160, 810 220, 750 240 C 690 250, 630 210, 610 160 Z"
-                    className="dw-map-continent"
-                  />
-                  <path
-                    d="M740 310 C 790 300, 830 330, 840 370 C 830 400, 780 410, 740 390 C 720 360, 720 330, 740 310 Z"
-                    className="dw-map-continent"
-                  />
-                  <circle cx="240" cy="140" r="14" className="dw-map-pulse-circle" />
-                  <circle cx="240" cy="140" r="6" className="dw-map-point-main" />
-                  <circle cx="510" cy="130" r="12" className="dw-map-pulse-circle" />
-                  <circle cx="510" cy="130" r="5" className="dw-map-point-main" />
-                  <circle cx="720" cy="170" r="15" className="dw-map-pulse-circle" />
-                  <circle cx="720" cy="170" r="6" className="dw-map-point-main" />
-                </svg>
-              </div>
-
-              <div className="dw-map-controls-col">
-                <span className="dw-map-legend-label">Visual Breaks</span>
-                <button
-                  type="button"
-                  className="dw-btn-secondary dw-map-action-btn"
-                  onClick={() => navigate("/assets")}
-                >
-                  Add/Transfer
-                </button>
-                <button
-                  type="button"
-                  className="dw-btn-secondary dw-map-plus-btn"
-                  title="Quick Add Asset"
-                  onClick={() => navigate("/assets")}
-                >
-                  <FaPlus size={12} />
-                </button>
-              </div>
-            </div>
-
-            <div className="dw-asset-classes-list">
-              <div className="dw-asset-class-row">
-                <div className="dw-asset-class-left">
-                  <span className="dw-legend-swatch swatch-financial" />
-                  <span className="dw-asset-class-name">Financial: 42%</span>
-                </div>
-                <div className="dw-asset-class-actions">
-                  <button
-                    type="button"
-                    className="dw-btn-secondary-icon"
-                    title="Transfer Financial Asset"
-                    onClick={() => navigate("/assets")}
+            <div className="content-card-body">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "12px",
+                  borderRadius: "6px",
+                  backgroundColor: isDeadManActive ? "var(--dw-success-light)" : "var(--dw-bg-primary)",
+                  border: `1px solid ${isDeadManActive ? "rgba(22, 132, 91, 0.25)" : "var(--dw-border)"}`,
+                  marginBottom: "14px",
+                }}
+              >
+                <FaShieldAlt
+                  size={18}
+                  color={isDeadManActive ? "var(--dw-success)" : "var(--dw-secondary)"}
+                />
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "0.88rem",
+                      color: isDeadManActive ? "var(--dw-success)" : "var(--dw-text-main)",
+                    }}
                   >
-                    <FaPlus size={10} />
-                  </button>
-                  <button
-                    type="button"
-                    className="dw-btn-secondary dw-asset-transfer-btn"
-                    onClick={() => navigate("/assets")}
-                  >
-                    Add/Transfer
-                  </button>
+                    {isDeadManActive
+                      ? `Active (${inactivityDays}-Day Timeout)`
+                      : "Switch Inactive"}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--dw-text-muted)" }}>
+                    {isDeadManActive
+                      ? "Monitors login activity before triggering death verification review"
+                      : "Enable to protect succession directives if inactive"}
+                  </div>
                 </div>
               </div>
 
-              <div className="dw-asset-class-row">
-                <div className="dw-asset-class-left">
-                  <span className="dw-legend-swatch swatch-digital" />
-                  <span className="dw-asset-class-name">Digital Accounts: 28%</span>
-                </div>
-                <div className="dw-asset-class-actions">
-                  <button
-                    type="button"
-                    className="dw-btn-secondary-icon"
-                    title="Transfer Digital Account"
-                    onClick={() => navigate("/assets")}
-                  >
-                    <FaPlus size={10} />
-                  </button>
-                  <button
-                    type="button"
-                    className="dw-btn-secondary dw-asset-transfer-btn"
-                    onClick={() => navigate("/assets")}
-                  >
-                    Add/Transfer
-                  </button>
-                </div>
-              </div>
+              <p style={{ fontSize: "0.82rem", margin: "0 0 14px 0" }}>
+                Inactivity never automatically distributes your estate. All releases
+                require independent administrative review.
+              </p>
 
-              <div className="dw-asset-class-row">
-                <div className="dw-asset-class-left">
-                  <span className="dw-legend-swatch swatch-documents" />
-                  <span className="dw-asset-class-name">Documents: 18%</span>
-                </div>
-                <div className="dw-asset-class-actions">
-                  <button
-                    type="button"
-                    className="dw-btn-secondary-icon"
-                    title="Transfer Document"
-                    onClick={() => navigate("/vault")}
-                  >
-                    <FaPlus size={10} />
-                  </button>
-                  <button
-                    type="button"
-                    className="dw-btn-secondary dw-asset-transfer-btn"
-                    onClick={() => navigate("/vault")}
-                  >
-                    Add/Transfer
-                  </button>
-                </div>
-              </div>
-
-              <div className="dw-asset-class-row">
-                <div className="dw-asset-class-left">
-                  <span className="dw-legend-swatch swatch-other" />
-                  <span className="dw-asset-class-name">Other: 12%</span>
-                </div>
-              </div>
+              <Link to="/deadman-settings" className="btn btn-secondary btn-sm" style={{ width: "100%" }}>
+                Configure Inactivity Settings
+              </Link>
             </div>
           </div>
 
-          {/* Card 5: Action Panel / Vault */}
-          <div className="dw-card">
-            <div className="dw-card-header-row">
-              <h2 className="dw-card-heading">Action Panel / Vault</h2>
-              <button
-                type="button"
-                className="dw-btn-primary"
-                onClick={() => navigate("/vault")}
-              >
-                Upload New Document
-              </button>
+          {/* Card 4: Beneficiaries Summary */}
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">
+                <FaUsers size={14} color="#3157A4" /> Appointed Beneficiaries ({beneficiariesList.length})
+              </h3>
+              <Link to="/beneficiary-portal" className="btn btn-secondary btn-sm">
+                Manage
+              </Link>
             </div>
 
-            <div className="dw-vault-table">
-              <div className="dw-vault-table-head">
-                <span className="dw-th-left">Secure Document</span>
-                <span className="dw-th-right">Status</span>
-              </div>
-
-              {vaultFiles.length > 0 ? (
-                vaultFiles.slice(0, 3).map((doc, idx) => (
-                  <div key={doc._id || idx} className="dw-vault-table-row">
-                    <div className="dw-vault-file-cell">
-                      <div
-                        className={`dw-file-icon-box ${
-                          doc.fileType?.includes("pdf") ? "pdf" : "key"
-                        }`}
-                      >
-                        {doc.fileType?.includes("pdf") ? (
-                          <FaFilePdf size={15} />
-                        ) : (
-                          <FaKey size={14} />
-                        )}
-                      </div>
-                      <div className="dw-file-name-meta">
-                        <span className="dw-file-text-name">{doc.fileName}</span>
-                        <span className="dw-file-text-sub">
-                          {doc.fileSize
-                            ? `${(doc.fileSize / 1024).toFixed(1)} KB`
-                            : "secure document.inc"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="dw-vault-status-cell">
-                      <span className="dw-badge-status-green">Uploaded</span>
-                      <button
-                        type="button"
-                        className="dw-card-menu-btn"
-                        title="Document options"
-                        onClick={() => navigate("/vault")}
-                      >
-                        <FaEllipsisV size={13} />
-                      </button>
-                    </div>
-                  </div>
-                ))
+            <div className="content-card-body" style={{ padding: beneficiariesList.length ? "10px" : "20px" }}>
+              {beneficiariesList.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "16px 0" }}>
+                  <p style={{ fontSize: "0.85rem", margin: "0 0 12px 0" }}>
+                    No beneficiaries registered. Add family members or nominees to your estate roster.
+                  </p>
+                  <Link to="/beneficiary-portal" className="btn btn-primary btn-sm">
+                    <FaPlus size={10} /> Add Beneficiary
+                  </Link>
+                </div>
               ) : (
-                <>
-                  <div className="dw-vault-table-row">
-                    <div className="dw-vault-file-cell">
-                      <div className="dw-file-icon-box pdf">
-                        <FaFilePdf size={15} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {beneficiariesList.slice(0, 3).map((ben) => (
+                    <div
+                      key={ben._id}
+                      style={{
+                        padding: "10px 12px",
+                        background: "var(--dw-bg-primary)",
+                        borderRadius: "6px",
+                        border: "1px solid var(--dw-border)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "0.88rem" }}>{ben.name}</div>
+                        <div style={{ fontSize: "0.78rem", color: "var(--dw-text-muted)" }}>
+                          {ben.relationship || "Nominee"} &bull; {ben.email}
+                        </div>
                       </div>
-                      <div className="dw-file-name-meta">
-                        <span className="dw-file-text-name">will_final.pdf.enc</span>
-                        <span className="dw-file-text-sub">secure document.inc</span>
-                      </div>
+                      <span className="badge badge-primary">
+                        {ben.sharePercentage || 50}%
+                      </span>
                     </div>
-                    <div className="dw-vault-status-cell">
-                      <span className="dw-badge-status-green">Uploaded</span>
-                      <button
-                        type="button"
-                        className="dw-card-menu-btn"
-                        title="File actions"
-                        onClick={() => navigate("/vault")}
-                      >
-                        <FaEllipsisV size={13} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="dw-vault-table-row">
-                    <div className="dw-vault-file-cell">
-                      <div className="dw-file-icon-box key">
-                        <FaKey size={14} />
-                      </div>
-                      <div className="dw-file-name-meta">
-                        <span className="dw-file-text-name">crypto_keys.gpg.enc</span>
-                        <span className="dw-file-text-sub">crypto_keys.gpg.enc</span>
-                      </div>
-                    </div>
-                    <div className="dw-vault-status-cell">
-                      <span className="dw-badge-status-green">Secured</span>
-                      <button
-                        type="button"
-                        className="dw-card-menu-btn"
-                        title="File actions"
-                        onClick={() => navigate("/vault")}
-                      >
-                        <FaEllipsisV size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </>
+                  ))}
+                </div>
               )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="content-card">
+            <div className="content-card-header">
+              <h3 className="content-card-title">Quick Actions</h3>
+            </div>
+            <div className="content-card-body" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <Link
+                to="/create-will"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--dw-border)",
+                  color: "var(--dw-text-main)",
+                  fontSize: "0.88rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span>Draft New Digital Will</span>
+                <FaArrowRight size={11} color="var(--dw-secondary)" />
+              </Link>
+              <Link
+                to="/assets"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--dw-border)",
+                  color: "var(--dw-text-main)",
+                  fontSize: "0.88rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span>Add Property or Account</span>
+                <FaArrowRight size={11} color="var(--dw-secondary)" />
+              </Link>
+              <Link
+                to="/vault"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--dw-border)",
+                  color: "var(--dw-text-main)",
+                  fontSize: "0.88rem",
+                  fontWeight: 500,
+                }}
+              >
+                <span>Deposit S3 Document</span>
+                <FaArrowRight size={11} color="var(--dw-secondary)" />
+              </Link>
             </div>
           </div>
         </div>

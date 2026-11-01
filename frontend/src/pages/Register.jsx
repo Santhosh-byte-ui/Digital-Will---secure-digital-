@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { FaShieldAlt, FaEye, FaEyeSlash, FaCheck } from "react-icons/fa";
 import { apiFetch } from "../api";
 
 function Register() {
@@ -12,7 +12,10 @@ function Register() {
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -23,9 +26,16 @@ function Register() {
 
   const handleRegister = async (event) => {
     event.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
 
     if (!formData.name || !formData.email || !formData.password) {
-      alert("Please fill all fields");
+      setErrorMessage("Please complete all required fields.");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters in length.");
       return;
     }
 
@@ -42,14 +52,17 @@ function Register() {
 
       const data = await response.json();
 
-      alert(data.message);
-
       if (response.ok) {
-        navigate("/login");
+        setSuccessMessage("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 1200);
+      } else {
+        setErrorMessage(data.message || "Registration could not be completed.");
       }
     } catch (error) {
-      console.log(error);
-      alert("Registration Failed");
+      console.error("Registration error:", error);
+      setErrorMessage("Unable to connect to the authentication server. Please check backend connection.");
     } finally {
       setLoading(false);
     }
@@ -59,186 +72,252 @@ function Register() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg,#020617,#0f172a,#1e3a8a)",
+        backgroundColor: "var(--dw-bg-primary)",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "20px",
-        overflowX: "hidden",
+        padding: "32px 16px",
       }}
     >
+      {/* Brand Header */}
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <Link
+          to="/"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "10px",
+            textDecoration: "none",
+          }}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              backgroundColor: "var(--dw-primary)",
+              color: "#FFFFFF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <FaShieldAlt size={18} />
+          </div>
+          <span
+            style={{
+              fontFamily: "var(--dw-font-heading)",
+              fontSize: "1.35rem",
+              fontWeight: 700,
+              color: "var(--dw-text-main)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            DigitalWill
+          </span>
+        </Link>
+        <p style={{ marginTop: "6px", fontSize: "0.88rem" }}>
+          Establish Your Digital Estate &amp; Testamentary Succession Account
+        </p>
+      </div>
+
+      {/* Auth Card */}
       <div
         style={{
           width: "100%",
-          maxWidth: "1200px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
-          gap: "40px",
-          alignItems: "center",
+          maxWidth: "440px",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid var(--dw-border)",
+          borderRadius: "8px",
+          boxShadow: "var(--dw-card-shadow)",
+          padding: "32px 28px",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, x: -80 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ color: "white", padding: "20px" }}
-        >
-          <h1
-            style={{
-              fontSize: "clamp(32px,5vw,55px)",
-              fontWeight: "800",
-            }}
-          >
-            Secure Your
-            <br />
-            Digital Legacy
-          </h1>
-
-          <p
-            style={{
-              fontSize: "20px",
-              lineHeight: "1.7",
-            }}
-          >
-            Create your account and start managing digital assets, wills,
-            beneficiaries and confidential documents securely.
+        <div style={{ marginBottom: "22px" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "4px" }}>
+            Create Your Account
+          </h2>
+          <p style={{ fontSize: "0.85rem", margin: 0 }}>
+            Start drafting digital wills and securing estate assets.
           </p>
+        </div>
 
+        {errorMessage && (
           <div
             style={{
-              marginTop: "30px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "15px",
-              fontSize: "18px",
+              padding: "10px 14px",
+              backgroundColor: "var(--dw-danger-light)",
+              border: "1px solid rgba(198, 71, 71, 0.25)",
+              color: "var(--dw-danger)",
+              borderRadius: "6px",
+              fontSize: "0.85rem",
+              marginBottom: "18px",
+              lineHeight: "1.4",
             }}
           >
-            <div>🔐 Secure Document Storage</div>
-            <div>📜 Digital Will Creation</div>
-            <div>👥 Beneficiary Management</div>
-            <div>🏦 Asset Tracking</div>
-            <div>📄 PDF Reports</div>
+            {errorMessage}
           </div>
-        </motion.div>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, x: 80 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{
-            background: "white",
-            borderRadius: "25px",
-            padding: "40px",
-            boxShadow: "0 25px 50px rgba(0,0,0,.3)",
-          }}
-        >
-          <h1
+        {successMessage && (
+          <div
             style={{
-              textAlign: "center",
-              color: "#001f7f",
+              padding: "10px 14px",
+              backgroundColor: "var(--dw-success-light)",
+              border: "1px solid rgba(22, 132, 91, 0.25)",
+              color: "var(--dw-success)",
+              borderRadius: "6px",
+              fontSize: "0.85rem",
+              marginBottom: "18px",
+              lineHeight: "1.4",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            🚀 Create Account
-          </h1>
+            <FaCheck size={12} /> {successMessage}
+          </div>
+        )}
 
-          <form onSubmit={handleRegister}>
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
+        <form onSubmit={handleRegister}>
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: "var(--dw-text-main)",
+                marginBottom: "6px",
+              }}
+            >
+              Full Legal Name
+            </label>
+            <input
+              type="text"
               name="name"
-              aria-label="Full Name"
-              autoComplete="name"
               required
-              placeholder="Full Name"
+              autoFocus
+              placeholder="e.g. Johnathan Connor"
               value={formData.name}
               onChange={handleChange}
-              style={inputStyle}
+              disabled={loading}
             />
+          </div>
 
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: "var(--dw-text-main)",
+                marginBottom: "6px",
+              }}
+            >
+              Primary Email Address
+            </label>
+            <input
               type="email"
               name="email"
-              aria-label="Email Address"
-              autoComplete="email"
               required
-              placeholder="Email Address"
+              placeholder="name@example.com"
               value={formData.email}
               onChange={handleChange}
-              style={inputStyle}
-            />
-
-            <motion.input
-              whileFocus={{ scale: 1.02 }}
-              type="password"
-              name="password"
-              aria-label="Password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              style={inputStyle}
-            />
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="submit"
               disabled={loading}
-              style={{
-                ...buttonStyle,
-                marginTop: "10px",
-              }}
-            >
-              {loading ? "Creating Account..." : "🚀 Create Account"}
-            </motion.button>
-          </form>
-
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "25px",
-            }}
-          >
-            <p>Already have an account?</p>
-
-            <Link
-              to="/login"
-              style={{
-                color: "#001f7f",
-                fontWeight: "bold",
-                textDecoration: "none",
-              }}
-            >
-              Login Here
-            </Link>
+            />
           </div>
-        </motion.div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: "var(--dw-text-main)",
+                marginBottom: "6px",
+              }}
+            >
+              Master Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                required
+                placeholder="Choose a strong passphrase"
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
+                style={{ paddingRight: "38px" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "var(--dw-secondary)",
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+              </button>
+            </div>
+            <span style={{ fontSize: "0.75rem", color: "var(--dw-text-muted)", marginTop: "4px", display: "block" }}>
+              Minimum 6 characters. Recommended: mix of letters, numbers, and symbols.
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: "100%", padding: "10px" }}
+          >
+            {loading ? "Registering Account..." : "Create Account"}
+          </button>
+        </form>
+
+        <div
+          style={{
+            marginTop: "22px",
+            paddingTop: "18px",
+            borderTop: "1px solid var(--dw-border)",
+            textAlign: "center",
+            fontSize: "0.85rem",
+            color: "var(--dw-text-muted)",
+          }}
+        >
+          Already registered?{" "}
+          <Link
+            to="/login"
+            style={{ fontWeight: 600, color: "var(--dw-primary)" }}
+          >
+            Sign in here
+          </Link>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: "24px",
+          fontSize: "0.78rem",
+          color: "var(--dw-text-muted)",
+          textAlign: "center",
+        }}
+      >
+        By registering, you agree to the estate protocol terms and private cloud data encryption policies.
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "15px",
-  marginBottom: "20px",
-  borderRadius: "12px",
-  border: "1px solid #ddd",
-  boxSizing: "border-box",
-};
-
-const buttonStyle = {
-  width: "100%",
-  padding: "15px",
-  border: "none",
-  borderRadius: "12px",
-  background: "linear-gradient(135deg,#001f7f,#2563eb)",
-  color: "white",
-  fontWeight: "700",
-  fontSize: "16px",
-  cursor: "pointer",
-};
 
 export default Register;

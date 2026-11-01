@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FaShieldAlt,
   FaThLarge,
-  FaUserShield,
   FaFileContract,
   FaCoins,
   FaUsers,
@@ -11,14 +10,10 @@ import {
   FaClock,
   FaCheckCircle,
   FaListUl,
-  FaSearch,
-  FaQuestionCircle,
   FaBell,
-  FaSun,
-  FaMoon,
-  FaChevronDown,
   FaSignOutAlt,
   FaUser,
+  FaCog,
 } from "react-icons/fa";
 import { apiFetch } from "../api";
 import "../pages/Dashboard.css";
@@ -26,17 +21,7 @@ import "../pages/Dashboard.css";
 function DashboardLayout({ title = "Dashboard", activeNav = "dashboard", children }) {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Persistent theme: dark (default matching Image 2) or light (matching Image 1)
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("digitalWill_dashboard_theme") || "dark";
-  });
-
-  const [searchQuery, setSearchQuery] = useState("");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [userAuthMenuOpen, setUserAuthMenuOpen] = useState(
-    activeNav === "profile" || activeNav === "admin",
-  );
 
   const [user] = useState(() => {
     try {
@@ -46,12 +31,6 @@ function DashboardLayout({ title = "Dashboard", activeNav = "dashboard", childre
       return null;
     }
   });
-
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    localStorage.setItem("digitalWill_dashboard_theme", nextTheme);
-  };
 
   const handleLogout = () => {
     const token = localStorage.getItem("token");
@@ -66,10 +45,9 @@ function DashboardLayout({ title = "Dashboard", activeNav = "dashboard", childre
     navigate("/login", { replace: true });
   };
 
-  // Close profile dropdown when clicking outside
   useEffect(() => {
     const closeDropdown = (e) => {
-      if (!e.target.closest(".dw-user-pill")) {
+      if (!e.target.closest(".saas-profile-container")) {
         setProfileDropdownOpen(false);
       }
     };
@@ -77,269 +55,263 @@ function DashboardLayout({ title = "Dashboard", activeNav = "dashboard", childre
     return () => window.removeEventListener("click", closeDropdown);
   }, []);
 
-  const displayName = user?.name
-    ? `${user.name} (${user.role === "admin" ? "Admin" : "Owner"})`
-    : "Santhosh (Admin)";
-  const avatarLetter = (user?.name || "Santhosh").charAt(0).toUpperCase();
+  const displayName = user?.name || "Account";
+  const userRole = user?.role === "admin" ? "Administrator" : "Estate Owner";
+  const avatarLetter = (user?.name || "A").charAt(0).toUpperCase();
 
   return (
-    <div className={`dw-dashboard-wrapper theme-${theme}`}>
-      {/* ----------------- TOP BANNER TITLE ----------------- */}
-      <div className="dw-banner-title">
-        DIGITAL-WILL: SECURE DIGITAL ESTATE &amp; INHERITANCE MANAGEMENT SYSTEM
-      </div>
+    <div className="saas-layout">
+      {/* =========================================================
+          LEFT SIDEBAR (Dark Navy #172033)
+          ========================================================= */}
+      <aside className="saas-sidebar" aria-label="Portal Navigation">
+        {/* Brand */}
+        <Link to="/dashboard" className="saas-sidebar-brand">
+          <div className="saas-sidebar-brand-icon">
+            <FaShieldAlt size={15} />
+          </div>
+          <span className="saas-sidebar-brand-name">DigitalWill</span>
+          <span className="saas-sidebar-brand-badge">SaaS</span>
+        </Link>
 
-      {/* ----------------- MAIN APP WINDOW FRAME ----------------- */}
-      <div className="dw-app-shell">
-        {/* =========================================================
-            LEFT SIDEBAR
-            ========================================================= */}
-        <aside className="dw-sidebar">
-          {/* Brand Row */}
-          <Link to="/dashboard" style={{ textDecoration: "none" }}>
-            <div className="dw-brand-row">
-              <div className="dw-brand-shield">
-                <FaShieldAlt size={16} />
-              </div>
-              <div className="dw-brand-title">DIGITAL-WILL</div>
-              <span className="dw-badge-secure">Secure</span>
-            </div>
+        {/* Navigation */}
+        <nav className="saas-sidebar-nav">
+          <span className="saas-sidebar-heading">Estate Overview</span>
+
+          <Link
+            to="/dashboard"
+            className={`saas-nav-link ${activeNav === "dashboard" ? "active" : ""}`}
+            title="Dashboard Overview"
+          >
+            <FaThLarge className="saas-nav-icon" />
+            <span>Dashboard</span>
           </Link>
 
-          {/* Navigation Menu */}
-          <nav className="dw-nav-menu" aria-label="Dashboard Sidebar">
-            {/* 1. Dashboard */}
+          <Link
+            to="/my-wills"
+            className={`saas-nav-link ${activeNav === "wills" ? "active" : ""}`}
+            title="Digital Wills Management"
+          >
+            <FaFileContract className="saas-nav-icon" />
+            <span>Digital Wills</span>
+          </Link>
+
+          <Link
+            to="/assets"
+            className={`saas-nav-link ${activeNav === "assets" ? "active" : ""}`}
+            title="Digital Asset Inventory"
+          >
+            <FaCoins className="saas-nav-icon" />
+            <span>Asset Management</span>
+          </Link>
+
+          <Link
+            to="/beneficiary-portal"
+            className={`saas-nav-link ${activeNav === "beneficiaries" ? "active" : ""}`}
+            title="Beneficiaries & Nominees"
+          >
+            <FaUsers className="saas-nav-icon" />
+            <span>Beneficiaries</span>
+          </Link>
+
+          <Link
+            to="/vault"
+            className={`saas-nav-link ${activeNav === "vault" ? "active" : ""}`}
+            title="Encrypted Document Vault"
+          >
+            <FaFolder className="saas-nav-icon" />
+            <span>Document Vault</span>
+          </Link>
+
+          <span className="saas-sidebar-heading">Succession Controls</span>
+
+          <Link
+            to="/deadman-settings"
+            className={`saas-nav-link ${activeNav === "deadman" ? "active" : ""}`}
+            title="Inactivity Heartbeat Monitoring"
+          >
+            <FaClock className="saas-nav-icon" />
+            <span>Inactivity Switch</span>
+          </Link>
+
+          {user?.role === "admin" ? (
             <Link
-              to="/dashboard"
-              className={`dw-nav-item ${activeNav === "dashboard" ? "active" : ""}`}
+              to="/admin"
+              className={`saas-nav-link ${activeNav === "verification" || activeNav === "admin" ? "active" : ""}`}
+              title="Death Verification Review"
             >
-              <span className="dw-nav-item-icon">
-                <FaThLarge />
-              </span>
-              <span>Dashboard</span>
+              <FaCheckCircle className="saas-nav-icon" />
+              <span>Death Verification</span>
             </Link>
-
-            {/* 2. User Authentication */}
-            <button
-              type="button"
-              className={`dw-nav-item ${activeNav === "profile" || activeNav === "admin" ? "active" : ""}`}
-              onClick={() => setUserAuthMenuOpen(!userAuthMenuOpen)}
-            >
-              <span className="dw-nav-item-icon">
-                <FaUserShield />
-              </span>
-              <span>User Authentication</span>
-              <FaChevronDown
-                className="dw-nav-chevron"
-                style={{
-                  transform: userAuthMenuOpen ? "rotate(180deg)" : "none",
-                  transition: "transform 0.2s ease",
-                }}
-              />
-            </button>
-            {userAuthMenuOpen && (
-              <div
-                style={{
-                  paddingLeft: "36px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "4px",
-                }}
-              >
-                <Link
-                  to="/profile"
-                  className={`dw-nav-item ${location.pathname === "/profile" ? "active" : ""}`}
-                  style={{ fontSize: "12.5px", padding: "6px 10px" }}
-                >
-                  My Profile &amp; Contact
-                </Link>
-                {user?.role === "admin" && (
-                  <Link
-                    to="/admin"
-                    className={`dw-nav-item ${location.pathname === "/admin" ? "active" : ""}`}
-                    style={{ fontSize: "12.5px", padding: "6px 10px" }}
-                  >
-                    User Management
-                  </Link>
-                )}
-              </div>
-            )}
-
-            {/* 3. Digital Will Management */}
-            <Link
-              to="/my-wills"
-              className={`dw-nav-item ${activeNav === "wills" ? "active" : ""}`}
-            >
-              <span className="dw-nav-item-icon">
-                <FaFileContract />
-              </span>
-              <span>Digital Will Management</span>
-            </Link>
-
-            {/* 4. Digital Asset Management */}
-            <Link
-              to="/assets"
-              className={`dw-nav-item ${activeNav === "assets" ? "active" : ""}`}
-            >
-              <span className="dw-nav-item-icon">
-                <FaCoins />
-              </span>
-              <span>Digital Asset Management</span>
-            </Link>
-
-            {/* 5. Beneficiary Management */}
+          ) : (
             <Link
               to="/beneficiary-portal"
-              className={`dw-nav-item ${activeNav === "beneficiaries" ? "active" : ""}`}
+              className={`saas-nav-link ${location.pathname === "/beneficiary-portal" ? "active" : ""}`}
+              title="Claim & Succession Status"
             >
-              <span className="dw-nav-item-icon">
-                <FaUsers />
-              </span>
-              <span>Beneficiary Management</span>
+              <FaCheckCircle className="saas-nav-icon" />
+              <span>Succession Status</span>
             </Link>
+          )}
 
-            {/* 6. Secure Document Vault */}
+          <Link
+            to="/audit-logs"
+            className={`saas-nav-link ${activeNav === "audit" ? "active" : ""}`}
+            title="System Activity & Audit Logs"
+          >
+            <FaListUl className="saas-nav-icon" />
+            <span>Audit Trail</span>
+          </Link>
+        </nav>
+
+        {/* Sidebar Footer User Info */}
+        <div className="saas-sidebar-footer">
+          <div className="saas-user-avatar">{avatarLetter}</div>
+          <div className="saas-user-info">
+            <div className="saas-user-name">{displayName}</div>
+            <div className="saas-user-role">{userRole}</div>
+          </div>
+          <Link
+            to="/profile"
+            style={{ color: "#94A3B8", padding: "4px" }}
+            title="Account Settings"
+          >
+            <FaCog size={13} />
+          </Link>
+        </div>
+      </aside>
+
+      {/* =========================================================
+          MAIN APPLICATION VIEW
+          ========================================================= */}
+      <div className="saas-main">
+        {/* Topbar */}
+        <header className="saas-topbar">
+          <h1 className="saas-topbar-title">{title}</h1>
+
+          <div className="saas-topbar-actions">
+            {/* Notification Bell */}
             <Link
-              to="/vault"
-              className={`dw-nav-item ${activeNav === "vault" ? "active" : ""}`}
+              to="/notifications"
+              className="saas-topbar-btn"
+              title="Notifications"
             >
-              <span className="dw-nav-item-icon">
-                <FaFolder />
-              </span>
-              <span>Secure Document Vault</span>
+              <FaBell size={13} />
+              <span className="saas-badge-dot" />
             </Link>
 
-            {/* 7. Inactivity Monitoring */}
-            <Link
-              to="/deadman-settings"
-              className={`dw-nav-item ${activeNav === "deadman" ? "active" : ""}`}
+            {/* User Profile Menu */}
+            <div
+              className="saas-profile-container"
+              style={{ position: "relative" }}
             >
-              <span className="dw-nav-item-icon">
-                <FaClock />
-              </span>
-              <span>Inactivity Monitoring</span>
-            </Link>
-
-            {/* 8. Death Verification (Review) */}
-            <Link
-              to={user?.role === "admin" ? "/admin" : "/beneficiary-portal"}
-              className={`dw-nav-item ${activeNav === "verification" ? "active" : ""}`}
-            >
-              <span className="dw-nav-item-icon">
-                <FaCheckCircle />
-              </span>
-              <span>Death Verification (Review)</span>
-            </Link>
-
-            {/* 9. Activity Logs */}
-            <Link
-              to="/audit-logs"
-              className={`dw-nav-item ${activeNav === "audit" ? "active" : ""}`}
-            >
-              <span className="dw-nav-item-icon">
-                <FaListUl />
-              </span>
-              <span>Activity Logs</span>
-            </Link>
-          </nav>
-        </aside>
-
-        {/* =========================================================
-            MAIN VIEW AREA
-            ========================================================= */}
-        <main className="dw-main-content">
-          {/* ----------------- TOPBAR ----------------- */}
-          <header className="dw-topbar">
-            <h1 className="dw-topbar-title">{title}</h1>
-
-            <div className="dw-topbar-actions">
-              {/* Search Pill */}
-              <div className="dw-search-box">
-                <FaSearch size={12} color="var(--dw-search-placeholder)" />
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Search"
-                />
-              </div>
-
-              {/* Help Button */}
               <button
                 type="button"
-                className="dw-icon-btn"
-                title="Documentation & Guidance"
-                onClick={() =>
-                  alert(
-                    "Digital-Will Platform: Securely store assets, assign beneficiaries, manage legal documents, and configure verified inheritance succession protocols.",
-                  )
-                }
-              >
-                <FaQuestionCircle size={14} />
-              </button>
-
-              {/* Notification Bell */}
-              <Link
-                to="/notifications"
-                className="dw-icon-btn"
-                title="Notifications"
-              >
-                <FaBell size={14} />
-                <span className="dw-notification-dot" />
-              </Link>
-
-              {/* Theme Toggle (Light <-> Dark) */}
-              <button
-                type="button"
-                className="dw-icon-btn"
-                title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
-                onClick={toggleTheme}
-                aria-label="Toggle Dashboard Theme"
-              >
-                {theme === "dark" ? (
-                  <FaSun size={14} color="#FBBF24" />
-                ) : (
-                  <FaMoon size={14} color="#2563EB" />
-                )}
-              </button>
-
-              {/* User Profile Pill */}
-              <div
-                className="dw-user-pill"
+                className="btn btn-secondary btn-sm"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
               >
-                <div className="dw-user-avatar">{avatarLetter}</div>
-                <span className="dw-user-name">{displayName}</span>
-                <FaChevronDown size={11} color="var(--dw-sidebar-text)" />
+                <span
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    backgroundColor: "#3157A4",
+                    color: "#FFFFFF",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                  }}
+                >
+                  {avatarLetter}
+                </span>
+                <span style={{ fontSize: "12.5px" }}>{displayName}</span>
+              </button>
 
-                {profileDropdownOpen && (
-                  <div className="dw-profile-dropdown">
-                    <Link to="/profile" className="dw-dropdown-link">
-                      <FaUser size={13} />
-                      <span>My Profile</span>
-                    </Link>
-                    <Link to="/audit-logs" className="dw-dropdown-link">
-                      <FaListUl size={13} />
-                      <span>Audit Logs</span>
-                    </Link>
-                    <button
-                      type="button"
-                      className="dw-dropdown-link logout"
-                      onClick={handleLogout}
-                    >
-                      <FaSignOutAlt size={13} />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              {profileDropdownOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "38px",
+                    width: "180px",
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid var(--dw-border)",
+                    borderRadius: "6px",
+                    boxShadow: "var(--dw-modal-shadow)",
+                    zIndex: 200,
+                    padding: "4px 0",
+                  }}
+                >
+                  <Link
+                    to="/profile"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12.5px",
+                      color: "var(--dw-text-main)",
+                    }}
+                    onClick={() => setProfileDropdownOpen(false)}
+                  >
+                    <FaUser size={12} color="#64748B" />
+                    <span>My Account</span>
+                  </Link>
+
+                  <Link
+                    to="/audit-logs"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12.5px",
+                      color: "var(--dw-text-main)",
+                    }}
+                    onClick={() => setProfileDropdownOpen(false)}
+                  >
+                    <FaListUl size={12} color="#64748B" />
+                    <span>Audit Trail</span>
+                  </Link>
+
+                  <div
+                    style={{
+                      height: "1px",
+                      backgroundColor: "var(--dw-border)",
+                      margin: "4px 0",
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12.5px",
+                      color: "var(--dw-danger)",
+                      background: "none",
+                      border: "none",
+                      textAlign: "left",
+                    }}
+                  >
+                    <FaSignOutAlt size={12} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
-          </header>
+          </div>
+        </header>
 
-          {/* ----------------- PAGE BODY ----------------- */}
-          <div className="dw-body-container">{children}</div>
-        </main>
+        {/* Content Area */}
+        <main className="saas-content">{children}</main>
       </div>
     </div>
   );
