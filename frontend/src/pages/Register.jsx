@@ -127,7 +127,7 @@ function Register() {
         style={{
           width: "100%",
           maxWidth: "440px",
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "var(--dw-bg-content)",
           border: "1px solid var(--dw-border)",
           borderRadius: "8px",
           boxShadow: "var(--dw-card-shadow)",

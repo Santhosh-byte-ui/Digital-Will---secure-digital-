@@ -295,7 +295,7 @@ function Home() {
       {/* =====================================================================
           4. SECURITY & LEGAL GUARANTEE
           ===================================================================== */}
-      <section style={{ backgroundColor: "#FFFFFF", padding: "60px 24px", borderTop: "1px solid var(--dw-border)" }} id="security">
+      <section style={{ backgroundColor: "var(--dw-bg-content)", padding: "60px 24px", borderTop: "1px solid var(--dw-border)" }} id="security">
         <div className="security-banner">
           <div>
             <span className="section-label">Legal Safety Standard</span>

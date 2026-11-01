@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaShieldAlt, FaBars, FaTimes } from "react-icons/fa";
+import { FaShieldAlt, FaBars, FaTimes, FaSun, FaMoon } from "react-icons/fa";
+import { useTheme } from "../context/ThemeContext";
 import { apiFetch } from "../api";
 import "./Navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const token = localStorage.getItem("token");
@@ -104,6 +106,17 @@ function Navbar() {
 
         {/* Actions */}
         <div className="nav-actions">
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="navbar-theme-btn"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            aria-label="Toggle Theme"
+          >
+            {theme === "dark" ? <FaSun size={13} color="#FBBF24" /> : <FaMoon size={13} />}
+          </button>
+
           {token ? (
             <>
               <Link to="/dashboard" className="btn btn-secondary btn-sm">

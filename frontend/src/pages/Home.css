@@ -3,10 +3,11 @@
    ============================================================================== */
 
 .home-container {
-  background-color: #F7F8FA;
+  background-color: var(--dw-bg-primary);
   color: var(--dw-text-main);
   min-height: 100vh;
   font-family: var(--dw-font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Hero Section */
@@ -87,16 +88,16 @@
 
 /* Hero Preview Mock Card */
 .hero-preview-card {
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border: 1px solid var(--dw-border);
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+  box-shadow: var(--dw-card-shadow);
   overflow: hidden;
 }
 
 .preview-card-header {
   padding: 12px 16px;
-  background-color: #F8FAFC;
+  background-color: var(--dw-border-subtle);
   border-bottom: 1px solid var(--dw-border);
   display: flex;
   align-items: center;
@@ -112,7 +113,8 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background-color: #CBD5E1;
+  background-color: var(--dw-secondary);
+  opacity: 0.5;
 }
 
 .preview-card-body {
@@ -163,7 +165,7 @@
 }
 
 .feature-box {
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border: 1px solid var(--dw-border);
   border-radius: 8px;
   padding: 24px;
@@ -204,7 +206,7 @@
 
 /* Workflow Steps */
 .workflow-section {
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border-top: 1px solid var(--dw-border);
   border-bottom: 1px solid var(--dw-border);
   padding: 70px 24px;
@@ -225,7 +227,7 @@
   padding: 24px 20px;
   border: 1px solid var(--dw-border);
   border-radius: 8px;
-  background-color: #F8FAFC;
+  background-color: var(--dw-border-subtle);
   position: relative;
 }
 
@@ -256,7 +258,7 @@
   max-width: 1200px;
   margin: 60px auto;
   padding: 32px;
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border: 1px solid var(--dw-border);
   border-radius: 8px;
   display: grid;

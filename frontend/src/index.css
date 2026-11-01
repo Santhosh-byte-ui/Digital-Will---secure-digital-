@@ -1,44 +1,70 @@
 /* ==============================================================================
-   DIGITAL-WILL: ENTERPRISE LEGAL-TECH DESIGN SYSTEM
-   Palette & Architecture:
-     Primary Background: #F7F8FA
-     Main Content Background: #FFFFFF
-     Sidebar: #172033 (Dark Navy)
-     Primary Accent: #3157A4
-     Secondary Accent: #64748B
-     Success: #16845B
-     Warning: #D99A2B
-     Danger: #C64747
-     Main Text: #182230
-     Muted Text: #687386
-     Borders: #E4E8EF
+   DIGITAL-WILL: ENTERPRISE LEGAL-TECH DESIGN SYSTEM (LIGHT & DARK MODES)
    ============================================================================== */
 
-:root {
-  --dw-bg-primary: #F7F8FA;
+:root, [data-theme="light"] {
+  --dw-bg-primary: #F1F4F9;
   --dw-bg-content: #FFFFFF;
-  --dw-sidebar: #172033;
-  --dw-sidebar-active: #212E4A;
-  --dw-sidebar-text: #94A3B8;
-  --dw-sidebar-text-active: #FFFFFF;
-  --dw-primary: #3157A4;
-  --dw-primary-hover: #264687;
-  --dw-primary-light: #EBF1FA;
+  --dw-sidebar: #FFFFFF;
+  --dw-sidebar-active: #0F172A;
+  --dw-sidebar-active-text: #FFFFFF;
+  --dw-sidebar-text: #475569;
+  --dw-sidebar-text-hover: #0F172A;
+  --dw-sidebar-hover-bg: #F1F5F9;
+  --dw-sidebar-border: #E2E8F0;
+  --dw-primary: #2563EB;
+  --dw-primary-hover: #1D4ED8;
+  --dw-primary-light: #EFF6FF;
   --dw-secondary: #64748B;
-  --dw-success: #16845B;
-  --dw-success-light: #E8F5EE;
-  --dw-warning: #D99A2B;
-  --dw-warning-light: #FBF4E6;
-  --dw-danger: #C64747;
-  --dw-danger-light: #FAECEC;
-  --dw-text-main: #182230;
-  --dw-text-muted: #687386;
-  --dw-border: #E4E8EF;
-  --dw-border-subtle: #EEF1F6;
-  --dw-card-shadow: 0 1px 3px rgba(16, 24, 40, 0.05), 0 1px 2px rgba(16, 24, 40, 0.03);
-  --dw-modal-shadow: 0 20px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.06);
+  --dw-success: #10B981;
+  --dw-success-light: #ECFDF5;
+  --dw-warning: #F59E0B;
+  --dw-warning-light: #FFFBEB;
+  --dw-danger: #EF4444;
+  --dw-danger-light: #FEF2F2;
+  --dw-purple: #8B5CF6;
+  --dw-purple-light: #F5F3FF;
+  --dw-text-main: #0F172A;
+  --dw-text-muted: #64748B;
+  --dw-border: #E2E8F0;
+  --dw-border-subtle: #F8FAFC;
+  --dw-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --dw-modal-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
   --dw-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --dw-font-heading: 'Manrope', 'Inter', -apple-system, sans-serif;
+}
+
+/* ==============================================================================
+   DARK THEME PALETTE (MATCHING EXACT MODEL DARK DASHBOARD MOCKUP)
+   ============================================================================== */
+[data-theme="dark"] {
+  --dw-bg-primary: #0A0E17;
+  --dw-bg-content: #131B2E;
+  --dw-sidebar: #0E1422;
+  --dw-sidebar-active: #1A2338;
+  --dw-sidebar-active-text: #FFFFFF;
+  --dw-sidebar-text: #8E9CAE;
+  --dw-sidebar-text-hover: #F8FAFC;
+  --dw-sidebar-hover-bg: #161F32;
+  --dw-sidebar-border: #1E293B;
+  --dw-primary: #3B82F6;
+  --dw-primary-hover: #60A5FA;
+  --dw-primary-light: rgba(59, 130, 246, 0.15);
+  --dw-secondary: #8E9CAE;
+  --dw-success: #34D399;
+  --dw-success-light: rgba(52, 211, 153, 0.12);
+  --dw-warning: #FBBF24;
+  --dw-warning-light: rgba(251, 191, 36, 0.14);
+  --dw-danger: #F87171;
+  --dw-danger-light: rgba(248, 113, 113, 0.14);
+  --dw-purple: #A78BFA;
+  --dw-purple-light: rgba(167, 139, 250, 0.16);
+  --dw-text-main: #F8FAFC;
+  --dw-text-muted: #8E9CAE;
+  --dw-border: #1E293B;
+  --dw-border-subtle: #161F32;
+  --dw-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --dw-modal-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.65);
 }
 
 /* Global Reset */
@@ -63,6 +89,7 @@ body {
   line-height: 1.5;
   min-height: 100%;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {
@@ -110,7 +137,7 @@ button, input, select, textarea {
 input, select, textarea {
   width: 100%;
   padding: 9px 12px;
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border: 1px solid var(--dw-border);
   border-radius: 6px;
   color: var(--dw-text-main);
@@ -120,11 +147,12 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--dw-primary);
-  box-shadow: 0 0 0 3px rgba(49, 87, 164, 0.12);
+  box-shadow: 0 0 0 3px rgba(49, 87, 164, 0.15);
 }
 
 input::placeholder, textarea::placeholder {
-  color: #94A3B8;
+  color: var(--dw-text-muted);
+  opacity: 0.7;
 }
 
 textarea {
@@ -167,14 +195,14 @@ textarea {
 }
 
 .btn-secondary {
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   color: var(--dw-text-main);
   border-color: var(--dw-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #F8FAFC;
-  border-color: #CBD5E1;
+  background-color: var(--dw-border-subtle);
+  border-color: var(--dw-border);
 }
 
 .btn-danger {
@@ -233,7 +261,7 @@ textarea {
 }
 
 .badge-neutral {
-  background-color: #F1F5F9;
+  background-color: var(--dw-border-subtle);
   color: var(--dw-secondary);
 }
 
@@ -257,7 +285,7 @@ textarea {
   overflow-x: auto;
   border: 1px solid var(--dw-border);
   border-radius: 8px;
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
 }
 
 table {
@@ -268,7 +296,7 @@ table {
 }
 
 table th {
-  background-color: #F8FAFC;
+  background-color: var(--dw-border-subtle);
   color: var(--dw-text-muted);
   font-size: 0.78rem;
   font-weight: 600;
@@ -290,7 +318,7 @@ table tr:last-child td {
 }
 
 table tr:hover td {
-  background-color: #F8FAFC;
+  background-color: var(--dw-border-subtle);
 }
 
 /* Scrollbars */
@@ -302,9 +330,9 @@ table tr:hover td {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--dw-border);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: var(--dw-secondary);
 }

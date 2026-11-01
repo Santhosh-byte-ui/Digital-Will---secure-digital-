@@ -8,14 +8,34 @@
   left: 0;
   width: 100%;
   height: 64px;
-  background-color: #FFFFFF;
+  background-color: var(--dw-bg-content);
   border-bottom: 1px solid var(--dw-border);
   z-index: 1000;
   transition: all 0.2s ease;
 }
 
 .site-header.scrolled {
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.05);
+  box-shadow: var(--dw-card-shadow);
+}
+
+.navbar-theme-btn {
+  background: var(--dw-bg-content);
+  border: 1px solid var(--dw-border);
+  color: var(--dw-secondary);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.navbar-theme-btn:hover {
+  background: var(--dw-border-subtle);
+  color: var(--dw-text-main);
+  border-color: var(--dw-border);
 }
 
 .nav-container {
