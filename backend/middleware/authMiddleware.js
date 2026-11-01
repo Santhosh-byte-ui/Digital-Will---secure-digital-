@@ -3,8 +3,6 @@ const User = require("../models/User");
 
 const protect = async (req, res, next) => {
   try {
-    console.log("🔥 JWT Middleware Running");
-
     let token;
 
     if (
@@ -22,30 +20,59 @@ const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.log("✅ Token Verified:", decoded);
-
-    // Fetch full user details from database
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id).select(
+      "name email role isVerified tokenVersion",
+    );
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return res.status(401).json({ message: "Not authorized." });
+    }
+
+    if (!user.isVerified) {
+      return res
+        .status(403)
+        .json({ message: "Email verification is required." });
+    }
+
+    if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+      return res.status(401).json({ message: "Session is no longer valid." });
     }
 
     req.user = user;
-
-    console.log("✅ Logged In User:", req.user);
-
     next();
-
   } catch (error) {
-    console.log("❌ JWT Error:", error.message);
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return res
+        .status(401)
+        .json({ message: "Authentication token is invalid or expired." });
+    }
 
-    res.status(401).json({
-      message: "Not authorized, invalid token",
-    });
+    console.error(`Authentication check failed (${error.name}).`);
+    return res
+      .status(500)
+      .json({ message: "Authentication could not be verified." });
   }
 };
 
-module.exports = { protect };
+const authorizeRoles =
+  (...roles) =>
+  (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized." });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res
+        .status(403)
+        .json({
+          message: "You do not have permission to perform this action.",
+        });
+    }
+
+    return next();
+  };
+
+module.exports = { protect, authorizeRoles };

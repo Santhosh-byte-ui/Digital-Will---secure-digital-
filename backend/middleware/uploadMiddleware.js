@@ -1,25 +1,18 @@
 const multer = require("multer");
-const multerS3 = require("multer-s3");
-const s3 = require("../config/s3");
+const path = require("path");
 
 const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: process.env.AWS_BUCKET_NAME,
-
-    metadata: function (req, file, cb) {
-      cb(null, {
-        fieldName: file.fieldname,
-      });
-    },
-
-    key: function (req, file, cb) {
-      cb(
-        null,
-        Date.now() + "-" + file.originalname
-      );
-    },
-  }),
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+    fields: 0,
+  },
+  fileFilter(req, file, callback) {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const allowed = [".pdf", ".png", ".jpg", ".jpeg"].includes(extension);
+    callback(allowed ? null : new Error("Unsupported file type"), allowed);
+  },
 });
 
 module.exports = upload;

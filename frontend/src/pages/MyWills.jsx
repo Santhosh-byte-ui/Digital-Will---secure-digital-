@@ -1,47 +1,35 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../api";
 
 function MyWills() {
   const [wills, setWills] = useState([]);
 
   useEffect(() => {
-    fetchWills();
-  }, []);
-
-  const fetchWills = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/will/my-wills",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setWills(data.wills);
+    async function fetchWills() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await apiFetch("/api/will/my-wills", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) setWills(data.wills);
+      } catch (error) {
+        console.error("Could not load wills.", error.name);
       }
-    } catch (error) {
-      console.log(error);
     }
-  };
+
+    void fetchWills();
+  }, []);
 
   const downloadPDF = async (willId, title) => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `https://digital-will-wg4g.onrender.com/api/pdf/download/${willId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiFetch(`/api/pdf/download/${willId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -65,7 +53,6 @@ function MyWills() {
       document.body.removeChild(link);
 
       window.URL.revokeObjectURL(url);
-
     } catch (error) {
       console.log(error);
       alert("Error downloading PDF");
@@ -84,8 +71,7 @@ function MyWills() {
 
       <div
         style={{
-          background:
-            "linear-gradient(135deg,#001f7f,#2563eb)",
+          background: "linear-gradient(135deg,#001f7f,#2563eb)",
           color: "white",
           padding: "30px",
           borderRadius: "20px",
@@ -94,10 +80,7 @@ function MyWills() {
       >
         <h1>📜 My Digital Wills</h1>
 
-        <p>
-          Manage, monitor and download your
-          digital wills securely.
-        </p>
+        <p>Manage, monitor and download your digital wills securely.</p>
       </div>
 
       {/* Stats */}
@@ -105,8 +88,7 @@ function MyWills() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
@@ -138,16 +120,12 @@ function MyWills() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(350px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit,minmax(350px,1fr))",
             gap: "20px",
           }}
         >
           {wills.map((will) => (
-            <div
-              key={will._id}
-              className="card"
-            >
+            <div key={will._id} className="card">
               <h2
                 style={{
                   color: "#001f7f",
@@ -160,10 +138,7 @@ function MyWills() {
                 <strong>Status:</strong>{" "}
                 <span
                   style={{
-                    color:
-                      will.status === "Draft"
-                        ? "#f59e0b"
-                        : "#16a34a",
+                    color: will.status === "Draft" ? "#f59e0b" : "#16a34a",
                     fontWeight: "bold",
                   }}
                 >
@@ -176,8 +151,7 @@ function MyWills() {
                 <span
                   style={{
                     color:
-                      will.deathVerificationStatus ===
-                      "Verified"
+                      will.deathVerificationStatus === "Verified"
                         ? "#16a34a"
                         : "#f59e0b",
                     fontWeight: "bold",
@@ -188,20 +162,16 @@ function MyWills() {
               </p>
 
               <p>
-                <strong>Assets:</strong>{" "}
-                {will.assets.length}
+                <strong>Assets:</strong> {will.assets.length}
               </p>
 
               <p>
-                <strong>Beneficiaries:</strong>{" "}
-                {will.beneficiaries.length}
+                <strong>Beneficiaries:</strong> {will.beneficiaries.length}
               </p>
 
               <p>
                 <strong>Created:</strong>{" "}
-                {new Date(
-                  will.createdAt
-                ).toLocaleDateString()}
+                {new Date(will.createdAt).toLocaleDateString()}
               </p>
 
               <p>
@@ -217,12 +187,7 @@ function MyWills() {
               </p>
 
               <button
-                onClick={() =>
-                  downloadPDF(
-                    will._id,
-                    will.title
-                  )
-                }
+                onClick={() => downloadPDF(will._id, will.title)}
                 style={{
                   background: "#001f7f",
                   color: "white",

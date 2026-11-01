@@ -6,6 +6,7 @@ const willSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     title: {
@@ -58,7 +59,7 @@ const willSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Will", willSchema);

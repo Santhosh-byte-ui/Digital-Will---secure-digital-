@@ -11,10 +11,9 @@ const getAuditLogs = async (req, res) => {
       count: logs.length,
       logs,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not load audit logs.",
     });
   }
 };

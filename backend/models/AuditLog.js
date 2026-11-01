@@ -6,6 +6,7 @@ const auditLogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     action: {
@@ -25,7 +26,9 @@ const auditLogSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
+
+auditLogSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("AuditLog", auditLogSchema);

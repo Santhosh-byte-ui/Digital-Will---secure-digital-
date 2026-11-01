@@ -1,34 +1,25 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../api";
 
 function AuditLogs() {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    fetchLogs();
-  }, []);
-
-  const fetchLogs = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/audit-logs",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setLogs(data.logs);
+    async function fetchLogs() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await apiFetch("/api/audit-logs", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) setLogs(data.logs);
+      } catch (error) {
+        console.error("Could not load audit logs.", error.name);
       }
-    } catch (error) {
-      console.log(error);
     }
-  };
+
+    void fetchLogs();
+  }, []);
 
   return (
     <div
@@ -40,8 +31,7 @@ function AuditLogs() {
     >
       <div
         style={{
-          background:
-            "linear-gradient(135deg,#001f7f,#2563eb)",
+          background: "linear-gradient(135deg,#001f7f,#2563eb)",
           color: "white",
           padding: "30px",
           borderRadius: "20px",
@@ -51,8 +41,7 @@ function AuditLogs() {
         <h1>📋 Audit Logs</h1>
 
         <p>
-          Track all important activities
-          performed within your Digital Will
+          Track all important activities performed within your Digital Will
           Management System.
         </p>
       </div>
@@ -81,8 +70,7 @@ function AuditLogs() {
                 background: "white",
                 padding: "20px",
                 borderRadius: "15px",
-                boxShadow:
-                  "0 8px 20px rgba(0,0,0,0.08)",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
               }}
             >
               <h3
@@ -95,20 +83,16 @@ function AuditLogs() {
               </h3>
 
               <p>
-                <strong>Module:</strong>{" "}
-                {log.module}
+                <strong>Module:</strong> {log.module}
               </p>
 
               <p>
-                <strong>Details:</strong>{" "}
-                {log.details}
+                <strong>Details:</strong> {log.details}
               </p>
 
               <p>
                 <strong>Date:</strong>{" "}
-                {new Date(
-                  log.createdAt
-                ).toLocaleString()}
+                {new Date(log.createdAt).toLocaleString()}
               </p>
             </div>
           ))}

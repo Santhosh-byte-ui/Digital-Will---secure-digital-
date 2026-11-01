@@ -3,21 +3,10 @@ const Will = require("../models/Will");
 // View Beneficiary Will
 const getBeneficiaryWill = async (req, res) => {
   try {
-    console.log("========== BENEFICIARY DEBUG ==========");
-    console.log("Logged in User:", req.user);
-
-    const allWills = await Will.find();
-
-    console.log("All Wills in Database:");
-    console.log(JSON.stringify(allWills, null, 2));
-
     const will = await Will.findOne({
       "beneficiaries.email": req.user.email,
       deathVerificationStatus: "Verified",
     });
-
-    console.log("Matched Will:");
-    console.log(will);
 
     if (!will) {
       return res.status(404).json({
@@ -30,10 +19,9 @@ const getBeneficiaryWill = async (req, res) => {
       will,
     });
   } catch (error) {
-    console.log("❌ BENEFICIARY ERROR:", error);
-
+    console.error(`Beneficiary will lookup failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not load the beneficiary will.",
     });
   }
 };

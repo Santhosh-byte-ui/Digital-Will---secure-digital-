@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema(
       default: "owner",
     },
 
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+
     // Emergency Contact
     emergencyContactName: {
       type: String,
@@ -88,7 +93,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("User", userSchema);

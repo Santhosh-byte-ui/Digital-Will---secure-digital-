@@ -1,35 +1,88 @@
 const Vault = require("../models/Vault");
 const createAuditLog = require("../utils/createAuditLog");
+const crypto = require("crypto");
+const path = require("path");
 
 const {
   DeleteObjectCommand,
   GetObjectCommand,
+  PutObjectCommand,
 } = require("@aws-sdk/client-s3");
 
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const s3 = require("../config/s3");
+const detectFileType = require("../utils/detectFileType");
+
+const resolveFileKey = (file) => {
+  if (file.filePath) return file.filePath;
+
+  try {
+    const url = new URL(file.fileUrl);
+    if (
+      url.protocol === "s3:" &&
+      url.hostname === process.env.AWS_BUCKET_NAME
+    ) {
+      return decodeURIComponent(url.pathname.slice(1));
+    }
+
+    if (url.hostname.endsWith(".amazonaws.com")) {
+      let key = decodeURIComponent(url.pathname.slice(1));
+      if (url.hostname.startsWith("s3.") || url.hostname.startsWith("s3-")) {
+        const prefix = `${process.env.AWS_BUCKET_NAME}/`;
+        if (key.startsWith(prefix)) key = key.slice(prefix.length);
+      }
+      return key || null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
 
 // ======================
 // Upload File
 // ======================
 const uploadFile = async (req, res) => {
+  let uploadedKey;
   try {
-    console.log("UPLOAD API HIT");
-    console.log("REQ.FILE =", req.file);
-
     if (!req.file) {
       return res.status(400).json({
         message: "No file uploaded",
       });
     }
 
+    const detectedType = detectFileType(req.file.buffer);
+    const originalExtension = path.extname(req.file.originalname).toLowerCase();
+    const allowedExtensions =
+      detectedType?.extension === "jpg"
+        ? [".jpg", ".jpeg"]
+        : detectedType
+          ? [`.${detectedType.extension}`]
+          : [];
+    if (!detectedType || !allowedExtensions.includes(originalExtension)) {
+      return res.status(400).json({
+        message: "Only valid PDF, PNG, and JPEG documents are accepted.",
+      });
+    }
+
+    uploadedKey = `vault/${req.user.id}/${crypto.randomUUID()}.${detectedType.extension}`;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: uploadedKey,
+        Body: req.file.buffer,
+        ContentType: detectedType.mime,
+      }),
+    );
+
     const newFile = await Vault.create({
       user: req.user.id,
       fileName: req.file.originalname,
-      fileUrl: req.file.location,
-      filePath: req.file.key, // save object key also
-      fileType: req.file.mimetype,
+      fileUrl: `s3://${process.env.AWS_BUCKET_NAME}/${uploadedKey}`,
+      filePath: uploadedKey,
+      fileType: detectedType.mime,
       fileSize: req.file.size,
     });
 
@@ -37,7 +90,7 @@ const uploadFile = async (req, res) => {
       req.user.id,
       "Upload File",
       "Vault",
-      `Uploaded document: ${req.file.originalname}`
+      `Uploaded document: ${req.file.originalname}`,
     );
 
     res.status(201).json({
@@ -45,10 +98,19 @@ const uploadFile = async (req, res) => {
       file: newFile,
     });
   } catch (error) {
-    console.log(error);
-
+    if (uploadedKey) {
+      await s3
+        .send(
+          new DeleteObjectCommand({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: uploadedKey,
+          }),
+        )
+        .catch(() => {});
+    }
+    console.error(`Vault upload failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "File upload failed. Please try again later.",
     });
   }
 };
@@ -66,10 +128,10 @@ const getFiles = async (req, res) => {
       files,
     });
   } catch (error) {
-    console.log(error);
+    console.error(`Vault list failed (${error.name}).`);
 
     res.status(500).json({
-      message: error.message,
+      message: "Could not load vault files.",
     });
   }
 };
@@ -90,15 +152,8 @@ const viewFile = async (req, res) => {
       });
     }
 
-    let fileKey = "";
-
-    if (file.filePath) {
-      fileKey = file.filePath;
-    } else if (file.fileUrl) {
-      fileKey = decodeURIComponent(
-        file.fileUrl.split(".amazonaws.com/")[1]
-      );
-    } else {
+    const fileKey = resolveFileKey(file);
+    if (!fileKey) {
       return res.status(400).json({
         message: "File path missing",
       });
@@ -117,10 +172,10 @@ const viewFile = async (req, res) => {
       url: signedUrl,
     });
   } catch (error) {
-    console.log(error);
+    console.error(`Vault view failed (${error.name}).`);
 
     res.status(500).json({
-      message: error.message,
+      message: "Could not open the vault file.",
     });
   }
 };
@@ -141,21 +196,16 @@ const deleteFile = async (req, res) => {
       });
     }
 
-    let fileKey = "";
-
-    if (file.filePath) {
-      fileKey = file.filePath;
-    } else if (file.fileUrl) {
-      fileKey = decodeURIComponent(
-        file.fileUrl.split(".amazonaws.com/")[1]
-      );
+    const fileKey = resolveFileKey(file);
+    if (!fileKey) {
+      return res.status(400).json({ message: "File path missing" });
     }
 
     await s3.send(
       new DeleteObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: fileKey,
-      })
+      }),
     );
 
     await Vault.findByIdAndDelete(file._id);
@@ -164,17 +214,17 @@ const deleteFile = async (req, res) => {
       req.user.id,
       "Delete File",
       "Vault",
-      `Deleted document: ${file.fileName}`
+      `Deleted document: ${file.fileName}`,
     );
 
     res.status(200).json({
       message: "File deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error(`Vault deletion failed (${error.name}).`);
 
     res.status(500).json({
-      message: error.message,
+      message: "Could not delete the vault file.",
     });
   }
 };

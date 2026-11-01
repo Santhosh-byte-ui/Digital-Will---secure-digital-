@@ -6,6 +6,7 @@ const vaultSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     fileName: {
@@ -14,8 +15,13 @@ const vaultSchema = new mongoose.Schema(
     },
 
     fileUrl: {
-     type: String,
-     required: true,
+      type: String,
+      required: true,
+    },
+
+    filePath: {
+      type: String,
+      required: true,
     },
 
     fileType: {
@@ -35,7 +41,9 @@ const vaultSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
+
+vaultSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Vault", vaultSchema);

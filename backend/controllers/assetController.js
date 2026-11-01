@@ -25,10 +25,9 @@ const addAsset = async (req, res) => {
       message: "Asset added successfully",
       asset,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not create the asset.",
     });
   }
 };
@@ -43,10 +42,9 @@ const getAssets = async (req, res) => {
     res.status(200).json({
       assets,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not load assets.",
     });
   }
 };
@@ -54,16 +52,28 @@ const getAssets = async (req, res) => {
 // Update Asset
 const updateAsset = async (req, res) => {
   try {
+    const updates = {};
+    for (const field of ["assetName", "assetType", "description", "value"]) {
+      if (Object.hasOwn(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
+
     const asset = await Asset.findOneAndUpdate(
       {
         _id: req.params.id,
         user: req.user.id,
       },
-      req.body,
+      { $set: updates },
       {
         new: true,
-      }
+        runValidators: true,
+      },
     );
+
+    if (!asset) {
+      return res.status(404).json({ message: "Asset not found" });
+    }
 
     await AuditLog.create({
       user: req.user.id,
@@ -76,10 +86,9 @@ const updateAsset = async (req, res) => {
       message: "Asset updated successfully",
       asset,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not update the asset.",
     });
   }
 };
@@ -104,10 +113,9 @@ const deleteAsset = async (req, res) => {
     res.status(200).json({
       message: "Asset deleted successfully",
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not delete the asset.",
     });
   }
 };

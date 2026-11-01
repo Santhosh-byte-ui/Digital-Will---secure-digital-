@@ -12,63 +12,54 @@ const getDashboardStats = async (req, res) => {
       user: req.user.id,
     });
 
-    const totalBeneficiaries =
-      await Beneficiary.countDocuments({
-        user: req.user.id,
-      });
+    const totalBeneficiaries = await Beneficiary.countDocuments({
+      user: req.user.id,
+    });
 
     const totalWills = await Will.countDocuments({
       owner: req.user.id,
     });
 
-    const totalDocuments =
-      await Vault.countDocuments({
-        user: req.user.id,
-      });
+    const totalDocuments = await Vault.countDocuments({
+      user: req.user.id,
+    });
 
     const assets = await Asset.find({
       user: req.user.id,
     });
 
     const totalEstateValue = assets.reduce(
-      (sum, asset) =>
-        sum + Number(asset.value || 0),
-      0
+      (sum, asset) => sum + Number(asset.value || 0),
+      0,
     );
 
     // Asset Distribution
-    const assetDistribution =
-      await Asset.aggregate([
-        {
-          $match: {
-            user: new mongoose.Types.ObjectId(
-              req.user.id
-            ),
+    const assetDistribution = await Asset.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(req.user.id),
+        },
+      },
+      {
+        $group: {
+          _id: "$assetType",
+          count: {
+            $sum: 1,
           },
         },
-        {
-          $group: {
-            _id: "$assetType",
-            count: {
-              $sum: 1,
-            },
-          },
-        },
-      ]);
+      },
+    ]);
 
-    const chartData =
-      assetDistribution.map((item) => ({
-        name: item._id,
-        value: item.count,
-      }));
+    const chartData = assetDistribution.map((item) => ({
+      name: item._id,
+      value: item.count,
+    }));
 
     // Monthly Upload Trend
     const uploadTrend = await Vault.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(
-            req.user.id
-          ),
+          user: new mongoose.Types.ObjectId(req.user.id),
         },
       },
       {
@@ -106,26 +97,21 @@ const getDashboardStats = async (req, res) => {
       "Dec",
     ];
 
-    const uploadTrendData =
-      uploadTrend.map((item) => ({
-        month:
-          monthNames[item._id.month],
-        uploads: item.uploads,
-      }));
+    const uploadTrendData = uploadTrend.map((item) => ({
+      month: monthNames[item._id.month],
+      uploads: item.uploads,
+    }));
 
     // Recent Activities
-    const recentActivities =
-      await AuditLog.find({
-        user: req.user.id,
-      })
-        .sort({ createdAt: -1 })
-        .limit(5);
+    const recentActivities = await AuditLog.find({
+      user: req.user.id,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     // Dead Man Status
-    const user = await User.findById(
-      req.user.id
-    ).select(
-      "deadManEnabled inactivityDays lastActiveDate deathVerificationTriggered"
+    const user = await User.findById(req.user.id).select(
+      "deadManEnabled inactivityDays lastActiveDate deathVerificationTriggered",
     );
 
     res.status(200).json({
@@ -139,10 +125,9 @@ const getDashboardStats = async (req, res) => {
       recentActivities,
       deadManStatus: user,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not load dashboard data.",
     });
   }
 };

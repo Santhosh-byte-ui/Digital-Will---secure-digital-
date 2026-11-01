@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { apiFetch } from "../api";
 
 function ResetPassword() {
   const { token } = useParams();
@@ -9,18 +10,15 @@ function ResetPassword() {
 
   const resetPassword = async () => {
     try {
-      const response = await fetch(
-        `https://digital-will-wg4g.onrender.com/api/auth/reset-password/${token}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            password,
-          }),
-        }
-      );
+      const response = await apiFetch(`/api/auth/reset-password/${token}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -29,7 +27,6 @@ function ResetPassword() {
       if (response.ok) {
         navigate("/login");
       }
-
     } catch (error) {
       console.log(error);
       alert("Something went wrong");
@@ -43,17 +40,13 @@ function ResetPassword() {
         textAlign: "center",
       }}
     >
-      <h1 style={{ color: "#001f7f" }}>
-        Reset Password
-      </h1>
+      <h1 style={{ color: "#001f7f" }}>Reset Password</h1>
 
       <input
         type="password"
         placeholder="Enter New Password"
         value={password}
-        onChange={(e) =>
-          setPassword(e.target.value)
-        }
+        onChange={(e) => setPassword(e.target.value)}
         style={{
           padding: "12px",
           width: "300px",

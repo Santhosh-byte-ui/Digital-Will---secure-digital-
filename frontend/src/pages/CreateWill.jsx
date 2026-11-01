@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api";
 
 function CreateWill() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     assetName: "",
@@ -29,36 +32,33 @@ function CreateWill() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/will/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: formData.title,
-            assets: [
-              {
-                assetName: formData.assetName,
-                assetType: formData.assetType,
-                value: Number(formData.value),
-              },
-            ],
-            beneficiaries: [
-              {
-                name: formData.beneficiaryName,
-                email: formData.beneficiaryEmail,
-                mobile: formData.beneficiaryMobile,
-                relation: "Nominee",
-                sharePercentage: 100,
-              },
-            ],
-            instructions: formData.instructions,
-          }),
-        }
-      );
+      const response = await apiFetch("/api/will/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          assets: [
+            {
+              assetName: formData.assetName,
+              assetType: formData.assetType,
+              value: Number(formData.value),
+            },
+          ],
+          beneficiaries: [
+            {
+              name: formData.beneficiaryName,
+              email: formData.beneficiaryEmail,
+              mobile: formData.beneficiaryMobile,
+              relation: "Nominee",
+              sharePercentage: 100,
+            },
+          ],
+          instructions: formData.instructions,
+        }),
+      });
 
       const data = await response.json();
 
@@ -76,7 +76,7 @@ function CreateWill() {
           instructions: "",
         });
 
-        window.location.href = "/my-wills";
+        navigate("/my-wills");
       } else {
         alert(data.message);
       }
@@ -131,8 +131,8 @@ function CreateWill() {
               color: "#666",
             }}
           >
-            Securely create your digital inheritance
-            plan and assign beneficiaries.
+            Securely create your digital inheritance plan and assign
+            beneficiaries.
           </p>
         </div>
 
@@ -140,9 +140,7 @@ function CreateWill() {
           {/* Will Information */}
 
           <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>
-              📄 Will Information
-            </h3>
+            <h3 style={{ color: "#001f7f" }}>📄 Will Information</h3>
 
             <input
               type="text"
@@ -157,9 +155,7 @@ function CreateWill() {
           {/* Asset Information */}
 
           <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>
-              🏠 Asset Information
-            </h3>
+            <h3 style={{ color: "#001f7f" }}>🏠 Asset Information</h3>
 
             <input
               type="text"
@@ -198,9 +194,7 @@ function CreateWill() {
           {/* Beneficiary Information */}
 
           <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>
-              👤 Beneficiary Information
-            </h3>
+            <h3 style={{ color: "#001f7f" }}>👤 Beneficiary Information</h3>
 
             <input
               type="text"
@@ -239,9 +233,7 @@ function CreateWill() {
           {/* Instructions */}
 
           <div style={sectionStyle}>
-            <h3 style={{ color: "#001f7f" }}>
-              📝 Final Instructions
-            </h3>
+            <h3 style={{ color: "#001f7f" }}>📝 Final Instructions</h3>
 
             <textarea
               name="instructions"
@@ -260,8 +252,7 @@ function CreateWill() {
             disabled={loading}
             style={{
               width: "100%",
-              background:
-                "linear-gradient(135deg,#001f7f,#2563eb)",
+              background: "linear-gradient(135deg,#001f7f,#2563eb)",
               color: "white",
               border: "none",
               padding: "15px",
@@ -271,9 +262,7 @@ function CreateWill() {
               cursor: "pointer",
             }}
           >
-            {loading
-              ? "Creating Will..."
-              : "📜 Create Digital Will"}
+            {loading ? "Creating Will..." : "📜 Create Digital Will"}
           </button>
         </form>
       </div>

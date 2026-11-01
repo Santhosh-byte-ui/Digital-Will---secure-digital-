@@ -1,126 +1,263 @@
+import { Link } from "react-router-dom";
+import { FaShieldAlt, FaLock, FaCloud, FaFileAlt } from "react-icons/fa";
+
 function Footer() {
   return (
     <footer
       style={{
-        background: "#0f172a",
-        color: "white",
-        marginTop: "80px",
-        padding: "60px 30px 30px",
+        background: "#020B16",
+        color: "#F3F7FF",
+        borderTop: "1px solid #123C5C",
+        marginTop: "100px",
+        padding: "70px 24px 35px",
+        fontFamily: "'Poppins', sans-serif",
       }}
     >
       <div
         style={{
-          maxWidth: "1200px",
-          margin: "auto",
+          maxWidth: "1280px",
+          margin: "0 auto",
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(250px,1fr))",
-          gap: "40px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: "45px",
         }}
       >
-        {/* Company */}
-
+        {/* Brand & Mission */}
         <div>
-          <h2
+          <div
             style={{
-              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "16px",
             }}
           >
-            🔐 Digital Legacy
-          </h2>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "rgba(0, 168, 255, 0.1)",
+                border: "1px solid rgba(0, 168, 255, 0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FaShieldAlt size={18} color="#00A8FF" />
+            </div>
+            <span
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "#F3F7FF",
+                letterSpacing: "-0.3px",
+              }}
+            >
+              DigitalWill
+            </span>
+          </div>
 
           <p
             style={{
-              color: "#cbd5e1",
-              lineHeight: "1.8",
+              color: "#A8BDD2",
+              fontSize: "14px",
+              lineHeight: "1.75",
+              maxWidth: "340px",
             }}
           >
-            A secure inheritance management
-            platform for managing digital assets,
-            wills, beneficiaries and confidential
-            documents.
+            A high-assurance digital estate management platform designed to
+            protect and preserve digital assets, credentials, legal documents,
+            and beneficiary designations with private cloud infrastructure.
           </p>
-        </div>
 
-        {/* Quick Links */}
-
-        <div>
-          <h3
+          <div
             style={{
-              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              marginTop: "20px",
+              color: "#20D4FF",
+              fontSize: "13px",
             }}
           >
-            Quick Links
-          </h3>
-
-          <p>Dashboard</p>
-          <p>Create Will</p>
-          <p>My Wills</p>
-          <p>Digital Vault</p>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <FaLock size={12} /> Encrypted at Rest
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <FaCloud size={12} /> AWS Cloud Vault
+            </span>
+          </div>
         </div>
 
-        {/* Features */}
-
+        {/* Platform Links */}
         <div>
-          <h3
+          <h4
             style={{
-              marginBottom: "15px",
+              color: "#F3F7FF",
+              fontSize: "15px",
+              fontWeight: 600,
+              marginBottom: "18px",
+              letterSpacing: "0.4px",
             }}
           >
-            Platform Features
-          </h3>
+            Platform Capabilities
+          </h4>
 
-          <p>Digital Will Creation</p>
-          <p>Asset Management</p>
-          <p>Beneficiary Portal</p>
-          <p>Death Verification</p>
-          <p>PDF Generation</p>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              fontSize: "14px",
+              color: "#A8BDD2",
+            }}
+          >
+            <li>
+              <Link to="/vault" style={{ color: "#A8BDD2", transition: "color 0.2s" }}>
+                AWS S3 Document Vault
+              </Link>
+            </li>
+            <li>
+              <Link to="/create-will" style={{ color: "#A8BDD2", transition: "color 0.2s" }}>
+                Digital Will Generator
+              </Link>
+            </li>
+            <li>
+              <Link to="/assets" style={{ color: "#A8BDD2", transition: "color 0.2s" }}>
+                Encrypted Asset Registry
+              </Link>
+            </li>
+            <li>
+              <Link to="/beneficiary-portal" style={{ color: "#A8BDD2", transition: "color 0.2s" }}>
+                Nominee Verification Portal
+              </Link>
+            </li>
+            <li>
+              <Link to="/deadman-settings" style={{ color: "#A8BDD2", transition: "color 0.2s" }}>
+                Dead Man Continuity Protocol
+              </Link>
+            </li>
+          </ul>
         </div>
 
-        {/* Security */}
-
+        {/* Security Architecture */}
         <div>
-          <h3
+          <h4
             style={{
-              marginBottom: "15px",
+              color: "#F3F7FF",
+              fontSize: "15px",
+              fontWeight: 600,
+              marginBottom: "18px",
+              letterSpacing: "0.4px",
             }}
           >
-            Security
-          </h3>
+            Security Architecture
+          </h4>
 
-          <p>JWT Authentication</p>
-          <p>Protected Access</p>
-          <p>Document Security</p>
-          <p>Role-Based Authorization</p>
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              fontSize: "14px",
+              color: "#A8BDD2",
+            }}
+          >
+            <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <FaFileAlt size={12} color="#00A8FF" /> Owner Direct Object Scoping
+            </li>
+            <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <FaLock size={12} color="#00A8FF" /> 7-Day Revocable JWT Tokens
+            </li>
+            <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <FaCloud size={12} color="#00A8FF" /> Private Presigned S3 Access
+            </li>
+            <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <FaShieldAlt size={12} color="#00A8FF" /> Magic-Byte Signature Validation
+            </li>
+            <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ color: "#20D4FF" }}>•</span> Immutable Audit Log Trails
+            </li>
+          </ul>
+        </div>
+
+        {/* Compliance / Transparency Notice */}
+        <div>
+          <h4
+            style={{
+              color: "#F3F7FF",
+              fontSize: "15px",
+              fontWeight: 600,
+              marginBottom: "18px",
+              letterSpacing: "0.4px",
+            }}
+          >
+            Legal Notice
+          </h4>
+
+          <p
+            style={{
+              color: "#A8BDD2",
+              fontSize: "13px",
+              lineHeight: "1.7",
+              background: "#071727",
+              border: "1px solid #123C5C",
+              padding: "14px 16px",
+              borderRadius: "10px",
+            }}
+          >
+            DigitalWill organizes assets, instructions, and credentials for
+            designated heirs. Formal estate validity, witness verification,
+            and court probate requirements vary by jurisdiction.
+          </p>
         </div>
       </div>
 
+      {/* Divider */}
       <hr
         style={{
-          margin: "40px 0 25px",
-          borderColor: "rgba(255,255,255,0.1)",
+          margin: "45px 0 24px",
+          borderColor: "#123C5C",
+          opacity: 0.6,
         }}
       />
 
+      {/* Bottom Bar */}
       <div
         style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           flexWrap: "wrap",
-          gap: "15px",
-          maxWidth: "1200px",
-          margin: "auto",
-          color: "#94a3b8",
-          fontSize: "14px",
+          gap: "16px",
+          color: "#A8BDD2",
+          fontSize: "13px",
         }}
       >
         <span>
-          © 2026 Digital Legacy Platform
+          © {new Date().getFullYear()} DigitalWill Platform. All rights reserved.
         </span>
 
-        <span>
-          Final Year Project | MERN Stack
-        </span>
+        <div style={{ display: "flex", gap: "20px" }}>
+          <a href="#about" style={{ color: "#A8BDD2" }}>
+            About
+          </a>
+          <a href="#features" style={{ color: "#A8BDD2" }}>
+            Capabilities
+          </a>
+          <a href="#contact" style={{ color: "#A8BDD2" }}>
+            Contact
+          </a>
+        </div>
       </div>
     </footer>
   );

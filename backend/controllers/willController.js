@@ -1,19 +1,10 @@
 const Will = require("../models/Will");
 const Notification = require("../models/Notification");
-const mongoose = require("mongoose");
 
 // Create Will
 const createWill = async (req, res) => {
   try {
-    console.log("Mongoose State:", mongoose.connection.readyState);
-    console.log("User:", req.user);
-
-    const {
-      title,
-      assets,
-      beneficiaries,
-      instructions,
-    } = req.body;
+    const { title, assets, beneficiaries, instructions } = req.body;
 
     const will = await Will.create({
       owner: req.user.id,
@@ -33,12 +24,10 @@ const createWill = async (req, res) => {
       message: "Will created successfully",
       will,
     });
-
   } catch (error) {
-    console.log("❌ CREATE WILL ERROR:", error);
-
+    console.error(`Will creation failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not create the will.",
     });
   }
 };
@@ -54,12 +43,10 @@ const getMyWills = async (req, res) => {
       count: wills.length,
       wills,
     });
-
   } catch (error) {
-    console.log("❌ GET WILL ERROR:", error);
-
+    console.error(`Will list query failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not load wills.",
     });
   }
 };
@@ -67,7 +54,10 @@ const getMyWills = async (req, res) => {
 // Get Single Will
 const getWillById = async (req, res) => {
   try {
-    const will = await Will.findById(req.params.id);
+    const will = await Will.findOne({
+      _id: req.params.id,
+      owner: req.user.id,
+    });
 
     if (!will) {
       return res.status(404).json({
@@ -76,12 +66,10 @@ const getWillById = async (req, res) => {
     }
 
     res.status(200).json(will);
-
   } catch (error) {
-    console.log("❌ GET SINGLE WILL ERROR:", error);
-
+    console.error(`Will lookup failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not load the will.",
     });
   }
 };
@@ -89,32 +77,33 @@ const getWillById = async (req, res) => {
 // Update Will
 const updateWill = async (req, res) => {
   try {
-    const will = await Will.findById(req.params.id);
+    const updates = {};
+    for (const field of ["title", "assets", "beneficiaries", "instructions"]) {
+      if (Object.hasOwn(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    }
 
-    if (!will) {
+    const updatedWill = await Will.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user.id },
+      { $set: updates },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedWill) {
       return res.status(404).json({
         message: "Will not found",
       });
     }
 
-    const updatedWill = await Will.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
-
     res.status(200).json({
       message: "Will updated successfully",
       will: updatedWill,
     });
-
   } catch (error) {
-    console.log("❌ UPDATE WILL ERROR:", error);
-
+    console.error(`Will update failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not update the will.",
     });
   }
 };
@@ -122,25 +111,22 @@ const updateWill = async (req, res) => {
 // Delete Will
 const deleteWill = async (req, res) => {
   try {
-    const will = await Will.findById(req.params.id);
+    const will = await Will.findOneAndDelete({
+      _id: req.params.id,
+      owner: req.user.id,
+    });
 
     if (!will) {
-      return res.status(404).json({
-        message: "Will not found",
-      });
+      return res.status(404).json({ message: "Will not found" });
     }
-
-    await Will.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       message: "Will deleted successfully",
     });
-
   } catch (error) {
-    console.log("❌ DELETE WILL ERROR:", error);
-
+    console.error(`Will deletion failed (${error.name}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Could not delete the will.",
     });
   }
 };

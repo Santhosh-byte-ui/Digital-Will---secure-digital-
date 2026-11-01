@@ -6,12 +6,14 @@ const deathVerificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     will: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Will",
       required: true,
+      index: true,
     },
 
     proofDocument: {
@@ -43,10 +45,9 @@ const deathVerificationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "DeathVerification",
-  deathVerificationSchema
-);
+deathVerificationSchema.index({ will: 1, status: 1 });
+
+module.exports = mongoose.model("DeathVerification", deathVerificationSchema);

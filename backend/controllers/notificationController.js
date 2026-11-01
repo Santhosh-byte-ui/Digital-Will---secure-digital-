@@ -11,10 +11,9 @@ const getNotifications = async (req, res) => {
       count: notifications.length,
       notifications,
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Could not load notifications.",
     });
   }
 };

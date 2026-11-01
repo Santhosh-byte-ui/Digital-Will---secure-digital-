@@ -1,39 +1,25 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../api";
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      console.log("TOKEN:", token);
-
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/notifications",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      console.log("COUNT:", data.count);
-      console.log("NOTIFICATIONS:", data.notifications);
-
-      if (response.ok) {
-        setNotifications(data.notifications);
+    async function fetchNotifications() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await apiFetch("/api/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) setNotifications(data.notifications);
+      } catch (error) {
+        console.error("Could not load notifications.", error.name);
       }
-    } catch (error) {
-      console.log("ERROR:", error);
     }
-  };
+
+    void fetchNotifications();
+  }, []);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -58,9 +44,7 @@ function Notifications() {
 
             <p>{notification.message}</p>
 
-            <small>
-              {new Date(notification.createdAt).toLocaleString()}
-            </small>
+            <small>{new Date(notification.createdAt).toLocaleString()}</small>
           </div>
         ))
       )}

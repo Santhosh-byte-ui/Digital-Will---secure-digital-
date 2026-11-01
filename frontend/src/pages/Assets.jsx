@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../api";
 import {
   FaHome,
   FaCar,
@@ -11,31 +12,21 @@ function Assets() {
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
-    fetchAssets();
-  }, []);
-
-  const fetchAssets = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/assets",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAssets(data.assets);
+    async function fetchAssets() {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await apiFetch("/api/assets", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) setAssets(data.assets);
+      } catch (error) {
+        console.error("Could not load assets.", error.name);
       }
-    } catch (error) {
-      console.log(error);
     }
-  };
+
+    void fetchAssets();
+  }, []);
 
   const getIcon = (type) => {
     const assetType = type?.toLowerCase();
@@ -57,7 +48,7 @@ function Assets() {
 
   const totalValue = assets.reduce(
     (sum, asset) => sum + Number(asset.value || 0),
-    0
+    0,
   );
 
   return (
@@ -72,8 +63,7 @@ function Assets() {
 
       <div
         style={{
-          background:
-            "linear-gradient(135deg,#001f7f,#2563eb)",
+          background: "linear-gradient(135deg,#001f7f,#2563eb)",
           color: "white",
           padding: "30px",
           borderRadius: "20px",
@@ -83,8 +73,8 @@ function Assets() {
         <h1>🏠 Asset Management</h1>
 
         <p>
-          Manage properties, bank accounts,
-          investments and valuable assets securely.
+          Manage properties, bank accounts, investments and valuable assets
+          securely.
         </p>
       </div>
 
@@ -93,8 +83,7 @@ function Assets() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
           gap: "20px",
           marginBottom: "30px",
         }}
@@ -127,25 +116,18 @@ function Assets() {
         <div className="card">
           <h2>No Assets Found</h2>
 
-          <p>
-            Add assets to start managing your
-            inheritance portfolio.
-          </p>
+          <p>Add assets to start managing your inheritance portfolio.</p>
         </div>
       ) : (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(320px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))",
             gap: "25px",
           }}
         >
           {assets.map((asset) => (
-            <div
-              key={asset._id}
-              className="card"
-            >
+            <div key={asset._id} className="card">
               <div
                 style={{
                   display: "flex",
@@ -166,9 +148,7 @@ function Assets() {
                     {asset.assetName}
                   </h3>
 
-                  <small>
-                    {asset.assetType}
-                  </small>
+                  <small>{asset.assetType}</small>
                 </div>
               </div>
 
@@ -188,9 +168,7 @@ function Assets() {
                     marginTop: "8px",
                   }}
                 >
-                  ₹{Number(
-                    asset.value
-                  ).toLocaleString()}
+                  ₹{Number(asset.value).toLocaleString()}
                 </h2>
               </div>
 
@@ -199,8 +177,7 @@ function Assets() {
                   color: "#555",
                 }}
               >
-                {asset.description ||
-                  "No description available"}
+                {asset.description || "No description available"}
               </p>
 
               <div
@@ -211,8 +188,7 @@ function Assets() {
                   borderRadius: "8px",
                 }}
               >
-                <strong>ID:</strong>{" "}
-                {asset._id.slice(-8)}
+                <strong>ID:</strong> {asset._id.slice(-8)}
               </div>
             </div>
           ))}

@@ -1,19 +1,16 @@
 const User = require("../models/User");
+const crypto = require("crypto");
 
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    console.log("Received Token:", token);
-
     const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpire: {
-        $gt: Date.now(),
+      verificationToken: {
+        $in: [token, crypto.createHash("sha256").update(token).digest("hex")],
       },
+      verificationTokenExpire: { $gt: Date.now() },
     });
-
-    console.log("User Found:", user);
 
     if (!user) {
       return res.status(400).json({
@@ -27,17 +24,12 @@ const verifyEmail = async (req, res) => {
 
     await user.save();
 
-    console.log("Email Verified Successfully");
-
     res.status(200).json({
       message: "Email verified successfully",
     });
-
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
-      message: error.message,
+      message: "Email verification failed. Please try again later.",
     });
   }
 };

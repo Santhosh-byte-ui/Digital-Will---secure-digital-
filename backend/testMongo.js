@@ -1,7 +1,17 @@
+const path = require("path");
+const dotenv = require("dotenv");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
-const uri =
-  "mongodb+srv://vishalk24cy_db_user:Digital123@digitalwillcluster.gf7jzxl.mongodb.net/?retryWrites=true&w=majority&appName=DigitalWillCluster";
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+
+const uri = process.env.MONGO_URI;
+
+if (!uri) {
+  console.error(
+    "MONGO_URI is missing. Check backend/.env or the environment configuration.",
+  );
+  process.exit(1);
+}
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -14,11 +24,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    console.log("✅ Connected Successfully!");
     await client.db("admin").command({ ping: 1 });
-    console.log("✅ Ping Successful!");
-  } catch (err) {
-    console.log(err);
+    console.log("MongoDB ping succeeded.");
+  } catch (error) {
+    const code = error.code ? `, code ${error.code}` : "";
+    console.error(`MongoDB ping failed (${error.name}${code}).`);
+    process.exitCode = 1;
   } finally {
     await client.close();
   }

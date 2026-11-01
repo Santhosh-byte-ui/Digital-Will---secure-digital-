@@ -1,42 +1,38 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "../api";
 
 function Vault() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  useEffect(() => {
-    fetchFiles();
-  }, []);
-
   // ==========================
   // Get Files
   // ==========================
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/vault",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiFetch("/api/vault", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
-
-      console.log("FILES FROM API:", data.files);
 
       if (response.ok) {
         setFiles(data.files);
       } else {
-        alert(data.message);
+        console.error("Could not load vault files.", response.status);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Could not load vault files.", error.name);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(fetchFiles);
+  }, [fetchFiles]);
 
   // ==========================
   // Upload File
@@ -53,16 +49,13 @@ function Vault() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(
-        "https://digital-will-wg4g.onrender.com/api/vault/upload",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await apiFetch("/api/vault/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -84,14 +77,11 @@ function Vault() {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `https://digital-will-wg4g.onrender.com/api/vault/view/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiFetch(`/api/vault/view/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -110,24 +100,19 @@ function Vault() {
   // Delete File
   // ==========================
   const deleteFile = async (id) => {
-    const confirmDelete = window.confirm(
-      "Delete this document?"
-    );
+    const confirmDelete = window.confirm("Delete this document?");
 
     if (!confirmDelete) return;
 
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `https://digital-will-wg4g.onrender.com/api/vault/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiFetch(`/api/vault/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -139,7 +124,7 @@ function Vault() {
     }
   };
 
-   return (
+  return (
     <div
       style={{
         minHeight: "100vh",
@@ -160,8 +145,8 @@ function Vault() {
         <h1>🔐 Digital Vault</h1>
 
         <p>
-          Store important legal documents, certificates and inheritance
-          records securely using AWS Cloud Storage.
+          Store important legal documents, certificates and inheritance records
+          securely using AWS Cloud Storage.
         </p>
       </div>
 
@@ -245,10 +230,7 @@ function Vault() {
           }}
         >
           {files.map((file) => (
-            <div
-              key={file._id}
-              className="card"
-            >
+            <div key={file._id} className="card">
               <h3>📄 {file.fileName}</h3>
 
               <p>
@@ -257,9 +239,7 @@ function Vault() {
 
               <p>
                 <strong>Size:</strong>{" "}
-                {file.fileSize
-                  ? `${file.fileSize} Bytes`
-                  : "N/A"}
+                {file.fileSize ? `${file.fileSize} Bytes` : "N/A"}
               </p>
 
               <p>

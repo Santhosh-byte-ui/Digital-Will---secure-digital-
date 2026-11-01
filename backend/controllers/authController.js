@@ -3,13 +3,48 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const transporter = require("../config/email");
+const formatSafeMailError = require("../utils/formatSafeMailError");
+
+const normalizeEmail = (email) => email.trim().toLowerCase();
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+const frontendUrl = () =>
+  (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+const escapeHtml = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character],
+  );
 
 // Register User
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof email !== "string" ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+      typeof password !== "string" ||
+      password.length < 8
+    ) {
+      return res.status(400).json({
+        message:
+          "Provide a name, valid email, and password of at least 8 characters.",
+      });
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(400).json({
@@ -19,116 +54,75 @@ const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate Verification Token
-    const verificationToken = crypto
-      .randomBytes(32)
-      .toString("hex");
-
+    // Create user as automatically verified – no email verification required
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
-      role,
-
-      verificationToken,
-      verificationTokenExpire: Date.now() + 10 * 60 * 1000,
+      role: "owner",
+      isVerified: true,
     });
-
-    // Verification Link
-    const verificationLink =
-      `http://localhost:5173/verify-email/${verificationToken}`;
-
-
-    // Send Verification Email
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: user.email,
-      subject: "Verify Your Email - Digital Will Management System",
-
-      html: `
-        <h2>Email Verification</h2>
-
-        <p>Hello ${user.name},</p>
-
-        <p>
-          Thank you for registering with Digital Will Management System.
-        </p>
-
-        <p>
-          Click the link below to verify your email:
-        </p>
-
-        <a href="${verificationLink}">
-          ${verificationLink}
-        </a>
-
-        <p>
-          This link expires in 10 minutes.
-        </p>
-      `,
-    });
-
 
     res.status(201).json({
-      message:
-        "User registered successfully. Please verify your email.",
+      message: "User registered successfully.",
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
       },
     });
-
   } catch (error) {
-    console.log(error);
-
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "User already exists" });
+    }
     res.status(500).json({
-      message: error.message,
+      message: "Registration failed. Please try again later.",
     });
   }
 };
-
 
 // Login User
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
+    }
+
+    const user = await User.findOne({ email: normalizeEmail(email) });
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
+      return res.status(401).json({
+        message: "Invalid email or password.",
       });
     }
 
-
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
-
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({
-        message: "Invalid password",
+      return res.status(401).json({
+        message: "Invalid email or password.",
       });
     }
-   // Update Last Active Date
+
+    // Email verification check removed – users can log in immediately
+
     user.lastActiveDate = Date.now();
     await user.save();
 
     const token = jwt.sign(
       {
         id: user._id,
-        role: user.role,
+        tokenVersion: user.tokenVersion || 0,
       },
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
-
 
     res.status(200).json({
       message: "Login successful",
@@ -141,49 +135,48 @@ const loginUser = async (req, res) => {
         role: user.role,
       },
     });
-
-
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message: "Login failed. Please try again later.",
     });
   }
 };
 
+const logoutUser = async (req, res) => {
+  try {
+    await User.updateOne({ _id: req.user.id }, { $inc: { tokenVersion: 1 } });
+    return res.status(204).end();
+  } catch (error) {
+    return res.status(500).json({ message: "Logout could not be completed." });
+  }
+};
 
 // Get Profile
 const getProfile = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id).select(
+      "name email role isVerified emergencyContactName emergencyContactMobile",
+    );
 
-    const user = await User.findById(req.user.id)
-      .select("-password");
-
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json({
       message: "Profile fetched successfully",
       user,
     });
-
-
   } catch (error) {
-
     res.status(500).json({
-      message: error.message,
+      message: "Could not load the profile.",
     });
-
   }
 };
-
 
 // Update Emergency Contact
 const updateEmergencyContact = async (req, res) => {
   try {
-
-    const {
-      emergencyContactName,
-      emergencyContactMobile,
-    } = req.body;
-
+    const { emergencyContactName, emergencyContactMobile } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -193,23 +186,23 @@ const updateEmergencyContact = async (req, res) => {
       },
       {
         new: true,
-      }
-    ).select("-password");
+      },
+    ).select(
+      "name email role isVerified emergencyContactName emergencyContactMobile",
+    );
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json({
-      message:
-        "Emergency contact updated successfully",
+      message: "Emergency contact updated successfully",
       user,
     });
-
-
   } catch (error) {
-
     res.status(500).json({
-      message: error.message,
+      message: "Could not update the emergency contact.",
     });
-
   }
 };
 // Forgot Password
@@ -217,61 +210,45 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    if (
+      typeof email === "string" &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    ) {
+      const user = await User.findOne({ email: normalizeEmail(email) });
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      if (user) {
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        user.resetPasswordToken = hashToken(resetToken);
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        const resetLink = `${frontendUrl()}/reset-password/${resetToken}`;
+
+        try {
+          await transporter.sendMail({
+            from: process.env.EMAIL,
+            to: user.email,
+            subject: "Reset Password - Digital Will Management System",
+            html: `<p>Hello ${escapeHtml(user.name)},</p><p><a href="${resetLink}">Reset your password</a></p><p>This link expires in 10 minutes.</p>`,
+          });
+        } catch (error) {
+          user.resetPasswordToken = null;
+          user.resetPasswordExpire = null;
+          await user.save();
+          console.error(
+            `Password recovery email delivery failed (${formatSafeMailError(error)}).`,
+          );
+        }
+      }
     }
 
-    const resetToken = crypto
-      .randomBytes(32)
-      .toString("hex");
-
-    user.resetPasswordToken = resetToken;
-
-    user.resetPasswordExpire =
-      Date.now() + 10 * 60 * 1000;
-
-    await user.save();
-
-    const resetLink =
-      `http://localhost:5173/reset-password/${resetToken}`;
-
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: user.email,
-      subject: "Reset Password - Digital Will Management System",
-
-      html: `
-        <h2>Reset Password</h2>
-
-        <p>Hello ${user.name},</p>
-
-        <p>
-          Click the link below to reset your password:
-        </p>
-
-        <a href="${resetLink}">
-          ${resetLink}
-        </a>
-
-        <p>
-          This link expires in 10 minutes.
-        </p>
-      `,
-    });
-
     res.status(200).json({
-      message: "Password reset email sent successfully",
+      message:
+        "If an eligible account exists, password recovery instructions will be sent.",
     });
-
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
-      message: error.message,
+      message: "Password recovery is temporarily unavailable.",
     });
   }
 };
@@ -282,11 +259,15 @@ const resetPassword = async (req, res) => {
 
     const { password } = req.body;
 
+    if (typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters.",
+      });
+    }
+
     const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpire: {
-        $gt: Date.now(),
-      },
+      resetPasswordToken: { $in: [token, hashToken(token)] },
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -295,27 +276,22 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      10
-    );
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     user.password = hashedPassword;
 
     user.resetPasswordToken = null;
     user.resetPasswordExpire = null;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
 
     await user.save();
 
     res.status(200).json({
       message: "Password reset successful",
     });
-
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
-      message: error.message,
+      message: "Password reset failed. Please try again later.",
     });
   }
 };
@@ -323,6 +299,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   getProfile,
   updateEmergencyContact,
   forgotPassword,

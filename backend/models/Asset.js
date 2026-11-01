@@ -6,6 +6,7 @@ const assetSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     assetName: {
@@ -30,7 +31,7 @@ const assetSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Asset", assetSchema);

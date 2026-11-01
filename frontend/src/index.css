@@ -1,9 +1,7 @@
 /* Google Font */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
 /* Global Reset */
-
 * {
   margin: 0;
   padding: 0;
@@ -11,6 +9,9 @@
   font-family: "Poppins", sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
 
 html,
 body,
@@ -20,29 +21,19 @@ body,
   overflow-x: hidden;
 }
 
-
 body {
-  background: #f4f7fc;
-  color: #222;
+  background: #020B16;
+  color: #F3F7FF;
 }
-
 
 a {
   text-decoration: none;
 }
 
-
 button {
   cursor: pointer;
   transition: 0.3s ease;
 }
-
-
-button:hover {
-  transform: translateY(-2px);
-}
-
-
 
 .container {
   width: 95%;
@@ -50,22 +41,15 @@ button:hover {
   margin: auto;
 }
 
-
-
 /* Cards */
-
 .card {
   background: white;
   border-radius: 15px;
   padding: 20px;
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
-
-
 /* Buttons */
-
 .primary-btn {
   background: #1d4ed8;
   color: white;
@@ -76,11 +60,9 @@ button:hover {
   font-weight: 600;
 }
 
-
 .primary-btn:hover {
   background: #1e40af;
 }
-
 
 .danger-btn {
   background: #dc2626;
@@ -90,7 +72,6 @@ button:hover {
   border-radius: 8px;
 }
 
-
 .success-btn {
   background: #16a34a;
   color: white;
@@ -99,14 +80,10 @@ button:hover {
   border-radius: 8px;
 }
 
-
-
 /* Inputs */
-
 input,
 select,
 textarea {
-
   width: 100%;
   padding: 14px;
   border-radius: 10px;
@@ -115,87 +92,51 @@ textarea {
   font-size: 15px;
   box-sizing: border-box;
   transition: 0.3s;
-
 }
-
 
 input:focus,
 textarea:focus,
 select:focus {
-
   border-color: #2563eb;
-
-  box-shadow:
-    0 0 0 4px rgba(37, 99, 235, 0.15);
-
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
-
-
 
 textarea {
-
   resize: vertical;
   min-height: 120px;
-
 }
-
-
-
 
 /* Headings */
-
-
 h1 {
-
   font-size: 34px;
   color: #0f172a;
-
 }
-
 
 h2 {
-
   color: #1e3a8a;
-
 }
-
 
 p {
-
   color: #666;
   line-height: 1.6;
-
 }
 
-
-
 /* Mobile Global Fix */
-
-@media(max-width:768px) {
-
+@media (max-width: 768px) {
   h1 {
     font-size: 26px;
   }
-
 
   h2 {
     font-size: 22px;
   }
 
-
   .container {
-
     width: 100%;
     padding: 0 15px;
-
   }
-
 
   button {
-
     max-width: 100%;
-
   }
-
 }
-

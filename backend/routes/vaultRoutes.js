@@ -12,21 +12,8 @@ const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
-// Test Route
-router.post("/test", (req, res) => {
-  console.log("TEST ROUTE HIT");
-  res.json({
-    message: "Test route working",
-  });
-});
-
 // Upload File
-router.post(
-  "/upload",
-  protect,
-  upload.single("file"),
-  uploadFile
-);
+router.post("/upload", protect, upload.single("file"), uploadFile);
 
 // Get My Files
 router.get("/", protect, getFiles);

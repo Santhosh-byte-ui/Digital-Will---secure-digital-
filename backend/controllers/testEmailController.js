@@ -1,4 +1,5 @@
 const transporter = require("../config/email");
+const formatSafeMailError = require("../utils/formatSafeMailError");
 
 const sendTestEmail = async (req, res) => {
   try {
@@ -13,10 +14,9 @@ const sendTestEmail = async (req, res) => {
       message: "Test email sent successfully.",
     });
   } catch (error) {
-    console.log(error);
-
+    console.error(`Test email delivery failed (${formatSafeMailError(error)}).`);
     res.status(500).json({
-      message: error.message,
+      message: "Test email could not be sent.",
     });
   }
 };
