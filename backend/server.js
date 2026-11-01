@@ -122,6 +122,8 @@ app.use("/api/vault", vaultRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/activity-history", auditLogRoutes);
+app.use("/api/activity", auditLogRoutes);
 
 app.use("/api/notifications", notificationRoutes);
 

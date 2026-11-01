@@ -1,6 +1,7 @@
 const DeathVerification = require("../models/DeathVerification");
 const Will = require("../models/Will");
 const Notification = require("../models/Notification");
+const createAuditLog = require("../utils/createAuditLog");
 
 // Submit Death Verification Request
 const submitVerificationRequest = async (req, res) => {
@@ -36,6 +37,14 @@ const submitVerificationRequest = async (req, res) => {
       user: req.user.id,
       will: willId,
       proofDocument,
+    });
+
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Verification Submitted",
+      category: "Succession Verification",
+      description: `Submitted death verification request for will: "${will.title}"`,
+      status: "pending",
     });
 
     res.status(201).json({
@@ -112,6 +121,15 @@ const approveVerificationRequest = async (req, res) => {
         "Your death verification request has been approved successfully.",
     });
 
+    await createAuditLog({
+      userId: request.user,
+      performedBy: req.user.id,
+      action: "Verification Approved",
+      category: "Succession Verification",
+      description: `Death verification request approved by administrator for will: "${will.title}"`,
+      status: "success",
+    });
+
     res.status(200).json({
       message: "Verification approved successfully",
       request,
@@ -157,6 +175,15 @@ const rejectVerificationRequest = async (req, res) => {
       user: request.user,
       title: "Death Verification Rejected",
       message: "Your death verification request was not approved.",
+    });
+
+    await createAuditLog({
+      userId: request.user,
+      performedBy: req.user.id,
+      action: "Verification Rejected",
+      category: "Succession Verification",
+      description: `Death verification request rejected by administrator for will: "${will.title}"`,
+      status: "failed",
     });
 
     return res

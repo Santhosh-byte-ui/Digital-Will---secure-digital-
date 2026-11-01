@@ -1,4 +1,5 @@
 const Beneficiary = require("../models/Beneficiary");
+const createAuditLog = require("../utils/createAuditLog");
 
 // Add Beneficiary
 const addBeneficiary = async (req, res) => {
@@ -12,6 +13,14 @@ const addBeneficiary = async (req, res) => {
       email,
       mobile,
       sharePercentage,
+    });
+
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Beneficiary Added",
+      category: "Beneficiary Management",
+      description: `Added beneficiary: ${name} (${relationship}) with ${sharePercentage}% allocation`,
+      status: "success",
     });
 
     res.status(201).json({
@@ -74,6 +83,14 @@ const updateBeneficiary = async (req, res) => {
       return res.status(404).json({ message: "Beneficiary not found" });
     }
 
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Beneficiary Updated",
+      category: "Beneficiary Management",
+      description: `Updated beneficiary: ${beneficiary.name}`,
+      status: "success",
+    });
+
     res.status(200).json({
       message: "Beneficiary updated successfully",
       beneficiary,
@@ -88,10 +105,20 @@ const updateBeneficiary = async (req, res) => {
 // Delete Beneficiary
 const deleteBeneficiary = async (req, res) => {
   try {
-    await Beneficiary.findOneAndDelete({
+    const beneficiary = await Beneficiary.findOneAndDelete({
       _id: req.params.id,
       user: req.user.id,
     });
+
+    if (beneficiary) {
+      await createAuditLog({
+        userId: req.user.id,
+        action: "Beneficiary Removed",
+        category: "Beneficiary Management",
+        description: `Removed beneficiary: ${beneficiary.name}`,
+        status: "success",
+      });
+    }
 
     res.status(200).json({
       message: "Beneficiary deleted successfully",

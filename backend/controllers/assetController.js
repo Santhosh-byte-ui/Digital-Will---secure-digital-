@@ -1,5 +1,5 @@
 const Asset = require("../models/Asset");
-const AuditLog = require("../models/AuditLog");
+const createAuditLog = require("../utils/createAuditLog");
 
 // Add Asset
 const addAsset = async (req, res) => {
@@ -14,11 +14,12 @@ const addAsset = async (req, res) => {
       value,
     });
 
-    await AuditLog.create({
-      user: req.user.id,
-      action: "CREATE",
-      module: "ASSET",
-      details: `Created asset: ${asset.assetName}`,
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Asset Added",
+      category: "Asset Management",
+      description: `Added asset: ${asset.assetName} (${asset.assetType || "General"})`,
+      status: "success",
     });
 
     res.status(201).json({
@@ -75,11 +76,12 @@ const updateAsset = async (req, res) => {
       return res.status(404).json({ message: "Asset not found" });
     }
 
-    await AuditLog.create({
-      user: req.user.id,
-      action: "UPDATE",
-      module: "ASSET",
-      details: `Updated asset: ${asset.assetName}`,
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Asset Updated",
+      category: "Asset Management",
+      description: `Updated asset: ${asset.assetName}`,
+      status: "success",
     });
 
     res.status(200).json({
@@ -102,11 +104,12 @@ const deleteAsset = async (req, res) => {
     });
 
     if (asset) {
-      await AuditLog.create({
-        user: req.user.id,
-        action: "DELETE",
-        module: "ASSET",
-        details: `Deleted asset: ${asset.assetName}`,
+      await createAuditLog({
+        userId: req.user.id,
+        action: "Asset Removed",
+        category: "Asset Management",
+        description: `Removed asset: ${asset.assetName}`,
+        status: "success",
       });
     }
 

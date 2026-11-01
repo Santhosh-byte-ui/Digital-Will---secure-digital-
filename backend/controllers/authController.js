@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const transporter = require("../config/email");
 const formatSafeMailError = require("../utils/formatSafeMailError");
+const createAuditLog = require("../utils/createAuditLog");
 
 const normalizeEmail = (email) => email.trim().toLowerCase();
 const hashToken = (token) =>
@@ -63,6 +64,14 @@ const registerUser = async (req, res) => {
       isVerified: true,
     });
 
+    await createAuditLog({
+      userId: user._id,
+      action: "User Registered",
+      category: "Authentication",
+      description: `Account created for ${user.email}`,
+      status: "success",
+    });
+
     res.status(201).json({
       message: "User registered successfully.",
       user: {
@@ -113,6 +122,14 @@ const loginUser = async (req, res) => {
     user.lastActiveDate = Date.now();
     await user.save();
 
+    await createAuditLog({
+      userId: user._id,
+      action: "User Login",
+      category: "Authentication",
+      description: `User successfully logged in (${user.email})`,
+      status: "success",
+    });
+
     const token = jwt.sign(
       {
         id: user._id,
@@ -145,6 +162,13 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     await User.updateOne({ _id: req.user.id }, { $inc: { tokenVersion: 1 } });
+    await createAuditLog({
+      userId: req.user.id,
+      action: "User Logout",
+      category: "Authentication",
+      description: "User logged out; active session invalidated.",
+      status: "success",
+    });
     return res.status(204).end();
   } catch (error) {
     return res.status(500).json({ message: "Logout could not be completed." });
@@ -194,6 +218,14 @@ const updateEmergencyContact = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Emergency Contact Updated",
+      category: "Security",
+      description: `Emergency contact updated to ${emergencyContactName}`,
+      status: "success",
+    });
 
     res.status(200).json({
       message: "Emergency contact updated successfully",
@@ -285,6 +317,14 @@ const resetPassword = async (req, res) => {
     user.tokenVersion = (user.tokenVersion || 0) + 1;
 
     await user.save();
+
+    await createAuditLog({
+      userId: user._id,
+      action: "Password Reset",
+      category: "Authentication",
+      description: "Account password successfully reset",
+      status: "success",
+    });
 
     res.status(200).json({
       message: "Password reset successful",

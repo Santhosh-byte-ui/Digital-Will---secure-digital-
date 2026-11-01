@@ -1,5 +1,6 @@
 const Will = require("../models/Will");
 const Notification = require("../models/Notification");
+const createAuditLog = require("../utils/createAuditLog");
 
 // Create Will
 const createWill = async (req, res) => {
@@ -18,6 +19,14 @@ const createWill = async (req, res) => {
       user: req.user.id,
       title: "Will Created",
       message: `Your will "${title}" was created successfully.`,
+    });
+
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Will Created",
+      category: "Will Management",
+      description: `Created will: "${title}"`,
+      status: "success",
     });
 
     res.status(201).json({
@@ -96,6 +105,14 @@ const updateWill = async (req, res) => {
       });
     }
 
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Will Updated",
+      category: "Will Management",
+      description: `Updated will: "${updatedWill.title}"`,
+      status: "success",
+    });
+
     res.status(200).json({
       message: "Will updated successfully",
       will: updatedWill,
@@ -119,6 +136,14 @@ const deleteWill = async (req, res) => {
     if (!will) {
       return res.status(404).json({ message: "Will not found" });
     }
+
+    await createAuditLog({
+      userId: req.user.id,
+      action: "Will Deleted",
+      category: "Will Management",
+      description: `Deleted will: "${will.title}"`,
+      status: "success",
+    });
 
     res.status(200).json({
       message: "Will deleted successfully",

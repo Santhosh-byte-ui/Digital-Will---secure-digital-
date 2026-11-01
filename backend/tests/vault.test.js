@@ -197,3 +197,4 @@ test("vault getFiles, viewFile, and deleteFile strictly scope access to the auth
   assert.equal(resDelete.statusCode, 404);
   assert.equal(findOneQuery.user, "owner-b");
 });
+

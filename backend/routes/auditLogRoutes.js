@@ -1,11 +1,20 @@
 const express = require("express");
-
-const { getAuditLogs } = require("../controllers/auditLogController");
-const { protect } = require("../middleware/authMiddleware");
+const {
+  getAuditLogs,
+  getAdminAuditLogs,
+  getCategories,
+} = require("../controllers/auditLogController");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Get User Audit Logs
+// Category discovery endpoint
+router.get("/categories", protect, getCategories);
+
+// Administrator activity history endpoint
+router.get("/admin", protect, authorizeRoles("admin"), getAdminAuditLogs);
+
+// User-scoped activity history endpoint
 router.get("/", protect, getAuditLogs);
 
 module.exports = router;

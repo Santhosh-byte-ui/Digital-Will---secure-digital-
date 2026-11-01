@@ -50,6 +50,7 @@ function App() {
     "/profile",
     "/deadman-settings",
     "/audit-logs",
+    "/activity-history",
     "/beneficiary-portal",
     "/admin",
     "/notifications",
@@ -131,6 +132,15 @@ function App() {
 
         <Route
           path="/audit-logs"
+          element={
+            <RequireAuth>
+              <AuditLogs />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/activity-history"
           element={
             <RequireAuth>
               <AuditLogs />
